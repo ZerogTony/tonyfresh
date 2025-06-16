@@ -3,6 +3,7 @@ import 'utils/scroll'
 import 'utils/sw'
 
 import AutoBind from 'auto-bind'
+import debounce from 'lodash/debounce'
 import Stats from 'stats.js'
 
 import each from 'lodash/each'
@@ -33,6 +34,8 @@ class App {
     }
 
     AutoBind(this)
+
+    this.onResizeDebounced = debounce(this.onResize, 100)
 
   
       this.createCanvas()
@@ -270,7 +273,7 @@ class App {
     window.addEventListener('touchstart', this.onInteract, { passive: true })
 
     window.addEventListener('popstate', this.onPopState, { passive: true })
-    window.addEventListener('resize', this.onResize, { passive: true })
+    window.addEventListener('resize', this.onResizeDebounced, { passive: true })
 
     window.addEventListener('mousedown', this.onTouchDown, { passive: true })
     window.addEventListener('mousemove', this.onTouchMove, { passive: true })
