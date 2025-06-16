@@ -54,10 +54,11 @@
   .intro__wrapper {
     margin: auto;
     width: 70vw;
+    max-width: 130rem;
     @include media('<=phone') {
       width: 95%;
     }
-  
- }}
+
+   }}
  
   
