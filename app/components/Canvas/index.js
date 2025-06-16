@@ -191,7 +191,13 @@ export default class {
    * Update.
    */
   update (scroll) {
-    this.gl.clearColor(this.background.r / 248, this.background.g / 248, this.background.b / 248, 1)
+    // convert 0-255 range to 0-1 for WebGL clear color
+    this.gl.clearColor(
+      this.background.r / 255,
+      this.background.g / 255,
+      this.background.b / 255,
+      1
+    )
 
     if (this.medias) {
       each(this.medias, media => {

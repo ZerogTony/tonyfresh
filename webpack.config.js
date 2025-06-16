@@ -47,7 +47,7 @@ const folders = [
   'case/airbnb/index.html',
   'case/discovery-kids/index.html',
   'case/rock-in-rio/index.html'
-];
+]
 
 const mapFolders = folders.map(filename => {
   return new HtmlWebpackPlugin({
@@ -112,7 +112,7 @@ module.exports = {
 
     new MiniCssExtractPlugin({
       filename: '[name].[hash].css',
-      chunkFilename: '[id].css',
+      chunkFilename: '[id].css'
     }),
 
     new HTMLInlineCSSWebpackPlugin()
