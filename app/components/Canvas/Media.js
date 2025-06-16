@@ -239,18 +239,6 @@ createMesh() {
     this.isAboutOpened = false
   }
 
-    /**
-   * About.
-   */
-    onAboutOpen () {
-      this.isAboutOpened = true
-      this.alpha.target = 0
-    }
-  
-    onAboutClose () {
-      this.isAboutOpened = false
-    }
-
   /**
    * Methods.
    */
