@@ -1,0 +1,94 @@
+mixin award(link, date, title, description, project)
+  li.about__section__list__item
+    span.about__section__list__dash(data-animation="line" data-animation-threshold="1" data-animation-target=".about__section__list__item")
+
+    a.about__section__list__link(
+      data-animation="y"
+      data-animation-threshold="1"
+      data-animation-target=".about__section__list__item"
+      href=link target="_blank"
+      rel="noreferrer noopener"
+    )
+      span.about__section__list__column=date
+      span.about__section__list__column=title
+      span.about__section__list__column=description
+      span.about__section__list__column=project
+
+mixin press(link, title, description)
+  li.about__section__list__item
+    span.about__section__list__dash(data-animation="line" data-animation-threshold="1" data-animation-target=".about__section__list__item")
+
+    a.about__section__list__link.about__section__list__link--article(
+      data-animation="y"
+      data-animation-threshold="1"
+      data-animation-target=".about__section__list__item"
+      href=link target="_blank"
+      rel="noreferrer noopener"
+    )
+      span.about__section__list__column=title
+      span.about__section__list__column=description
+
+section.about
+  .about__content
+    .about__wrapper
+      header.about__header
+        h1.about__header__title
+          span.about__header__title__text
+            | #[span TIM]
+            | #[span ANDREWS]
+
+          span.about__header__title__text
+            | #[span GRAPHIC]
+
+          span.about__header__title__text
+            | #[span DESIGN]
+
+      .about__gallery
+    
+
+      .about__sections
+        .about__section
+          h2.about__section__title BIO
+
+          .about__section__content
+            p.about__section__description(data-animation="paragraph")
+              | I’m Tim Andrews, I’m a digital Designer based in the UK specialised in
+              | Creative design in social media and marketing.
+
+
+            p.about__section__description(data-animation="paragraph")
+              | During my career, I have had the opportunity to collaborate in challenging projects for renown
+              |  brands such as Popeyes, Spotify, Wireless, Jack Daniels, Stolichnaya, Hedkandi, Balance Magazine, BBC Food,
+              | and Idris Elba.
+
+        .about__section
+          h2.about__section__title EXPERIENCE 
+
+          .about__section__content
+            p.about__section__number 9
+            p.about__section__number2  YEARS
+
+            ul.about__section__list
+              +award("/case'", "202", "54 Magazine", "Graphic Design & Social Media", "Graphic Designer")
+              +award("/case'", "2023", "Sazy", "Graphic Design", "Graphic Designer")
+              +award("/case'", "2022", "Paq Works", "Spotify/ Wireless Festival", "Freelance Designer")
+              +award("/case'", "2021-2022","TFR", "Popeyes Uk Launch", "Graphic Design Lead")
+              +award("/case'", "2022","TFR", "Hydrafacial Uk Launch", "Graphic Design Lead")
+              +award("/case'","2021","TFR", "Boxpark Popup/Naughty Boy", "Graphic Design Lead")
+              +award("/case'", "2021", "LFA", "Annual Bench Competition", "Furniture Designer")
+              +award("/case'", "2021", "TFR", "German Doner Kebab", "Graphic Design Lead")
+              +award("/case'", "2021-2022", "TFR", "Idris Elba Social Content", "Graphic Design Lead")
+              +award("/case'", "2021-2022", "TFR", "Port Noire Social Content", "Graphic Design Lead")
+              +award("/case'", "2021-2022", "TFR", "The Harder They Fall Premiere Party", "Graphic Design Lead")
+              +award("/case'", "2021", "TFR", "Bulldog Gin Social Content", "Graphic Design Lead")
+              +award("/case'", "2019", "Maxwells Group", "Cafe de Paris Relaunch", "Senior Graphic Designer")
+              +award("/case'","2019", "Maxwells Group", "Jack Daniels Photobooth", "Senior Graphic Designer")
+              +award("/case'", "2018", "Maxwells Group", "OCB Launch", "Senior Graphic Designer")
+              +award("/case'", "2021", "Etefy", "Social Content", "Graphic Designer")
+              +award("/case'", "2021", "The Cuban", "Social Content", "Graphic Designer")
+              +award("/case'", "2021", "The Cuban", "Hedkandi poster Design", "Graphic Designer")
+
+             
+      
+            p.about__section__description(data-animation="paragraph" data-animation-threshold="1")
+              | You can reach me at #[a(href="mailto:tusiime.andrews@gmail.com") tusiime.andrews@gmail.com].

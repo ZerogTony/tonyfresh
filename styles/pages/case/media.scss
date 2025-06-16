@@ -1,0 +1,138 @@
+@keyframes loading {
+  from {
+    opacity: 1;
+  }
+}
+
+.case__gallery {
+  opacity: 0;
+  transition: opacity 0.4s 1s ease;
+
+  .mobile & {
+    transition-delay: 0s;
+  }
+
+  .case--active & {
+    opacity: 1;
+  }
+}
+
+// Base styling for each gallery "media" item
+.case__gallery__media {
+  &:not(:first-child) {
+    margin-top: 10rem;
+  }
+
+  @include media('<=phone') {
+    &:not(:first-child) {
+      margin-top: 2.5rem;
+    }
+  }
+}
+
+// The general "box" that wraps each video/image
+.case__gallery__media__box {
+  width: 65%;
+  max-width: 192rem;
+  margin: 0 auto;
+  position: relative;
+  background: transparent;
+  // NO flex here, so images keep their original layout
+}
+
+// ─────────────────────────────────────────────
+// NEW: We apply a fade-in with a delay to the .video-box
+// ─────────────────────────────────────────────
+.video-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Start hidden */
+  opacity: 0;
+  /* 
+    1s fade, waits 1s before starting:
+    - First number = fade duration
+    - Second number = delay before fade
+  */
+  transition: opacity 1s ease 1s;
+
+  // When the case becomes active, fade in
+  .case--active & {
+    opacity: 1;
+  }
+}
+
+// The loading spinner (for images, presumably)
+.case__gallery__media__loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s ease;
+  white-space: nowrap;
+  z-index: 1;
+
+  span {
+    animation: loading 0.4s ease infinite alternate;
+    background: $color-pine-tree;
+    border-radius: 50%;
+    display: inline-block;
+    height: 1rem;
+    margin-right: 1rem;
+    opacity: 0;
+    transition: background-color 0.5s ease;
+    width: 1rem;
+
+    &:nth-child(2) {
+      animation-delay: 0.13s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.26s;
+    }
+  }
+
+  .case__gallery__media--active & {
+    opacity: 0;
+  }
+
+  @include media('<=phone') {
+    span {
+      height: 0.6rem;
+      margin-right: 1rem;
+      width: 0.6rem;
+    }
+  }
+}
+
+// The placeholder for images (maintains aspect ratio)
+.case__gallery__media__placeholder {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  z-index: 2;
+}
+
+// The actual image, absolutely positioned over the placeholder
+.case__gallery__media__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+
+  .case__gallery__media__placeholder--active & {
+    opacity: 1;
+  }
+}
+
+// Style for the <video> element
+video.case__media__video {
+  display: block;
+  max-width: 100%; // or whatever width you prefer
+  height: auto;    // maintain aspect ratio
+}

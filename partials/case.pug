@@ -1,0 +1,669 @@
+mixin template({ id, title, company, role, technologies, link, label, gallery, description, videos })
+  article.case(id=id)
+    header.case__header
+      h3.case__title
+        span.case__title__text= title
+
+      figure.case__media
+        img.case__media__image(
+          data-src=`/projects/${id}.jpg`
+          data-src-webp=`/projects/${id}.webp`
+        )
+
+    .case__information
+      p.case__information__detail
+        | #[strong.case__information__detail__title Company]
+        | #{company}
+
+      p.case__information__detail
+        | #[strong.case__information__detail__title Role]
+        | #{role}
+
+      p.case__information__detail
+        | #[strong.case__information__detail__title Practice]
+        | #{technologies}
+
+    button.case__description__toggle(data-case-id=id) Read Description
+
+    .case__description(id=`${id}-description`, style='display: none;')
+      p.case__description__text= description
+
+    .case__gallery
+      // VIDEOS
+      if videos
+        each videoFile in videos
+          .case__gallery__media.video-container
+            // NOTE: We add a .video-box class here so only videos get flexed
+            .case__gallery__media__box.video-box
+              video.case__media__video(autoplay loop muted playsinline)
+                source(src=`/case/${id}/${videoFile}`, type='video/mp4')
+                | Your browser does not support the video tag.
+
+      // IMAGES
+      each content in gallery
+        .case__gallery__media.image-container
+          .case__gallery__media__box(style=`max-width: ${content.width / 10}rem;`)
+            span.case__gallery__media__loader
+              span
+              span
+              span
+            span.case__gallery__media__placeholder(
+              data-src=`/case/${id}/${content.image}.jpg`
+              data-src-webp=`/case/${id}/${content.image}.webp`
+              style=`padding-top: ${content.height / content.width * 100}%;`
+            )
+
+
+
+
+
+.cases
+  +template({
+    id: 'popeyes',
+    title: 'Popeyes',
+    company: 'Popeyes',
+    role: 'Lead Designer',
+    technologies: 'Graphic Design',
+    description: `
+      I worked on the UK launch of the fast-food brand, Popeyes. This involved social content, launch activations, and promotions. The goal was to develop a unique brand voice for the UK audience while aligning with the global brand identity.
+      In addition to the branding work, I also led for a graffiti mural activation in Shoreditch, London. The mural was to promote the launch and a Megan Thee Stallion collaboration and a QR code was incorporated into the art, to be scanned for a promo deal.
+      The artwork was created from existing assets given by the Popeyes marketing team. A QR code was incorporated into the mural, allowing passers-by to scan it for a free promo deal.
+    `,
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '810', width: '810' },
+      { image: '8', type: 'screenshot', height: '810', width: '810' },
+      { image: '7', type: 'screenshot', height: '1080', width: '810' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1080' },
+      
+    ],
+  })
+
+
+
+
+  +template({
+    id: 'sazy',
+    title: 'Sazy',
+    company: 'Sazy',
+    role: 'Lead Graphic Designer',
+    technologies: 'Graphic Design',
+    description: 'Led visual design at this growing startup, refining and strengthening the company’s brand identity through email campaigns and custom label design. Directed product photoshoots and managed post-production, while maintaining brand consistency through detailed guidelines. Created designs for our website and marketing materials, ensuring a cohesive look and feel across all channels',
+    videos: [
+    'Pescara.webm',
+    'Storychairs.webm'
+  ],
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      ]
+   
+         
+  })
+
+  +template({
+    id: 'spotify',
+    title: 'Spotify',
+    company: 'Freelance',
+    role: 'Designer',
+    technologies: 'Graphic Design',
+    description: ' I Created poster art for Spotifys NOCAP campaign, which was across print and digital. The posters were used at Wireless Festival, and also across central London billboards.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '810' },
+      { image: '5', type: 'screenshot', height: '1080', width: '810' },
+      { image: '6', type: 'screenshot', height: '1080', width: '810' },
+      { image: '7', type: 'screenshot', height: '1080', width: '810' },
+      { image: '9', type: 'screenshot', height: '1080', width: '810' },
+    
+
+    ]
+  })
+
+  +template({
+    id: 'boxpark',
+    title: 'Boxpark',
+    company: 'Naughty Boy Kitchen',
+    role: 'Designer',
+    technologies: 'Furniture Design',
+    description: 'I worked on the design of Naughty Boys pop-up restaurant in Boxpark, Croydon. Working with the team at Boxpark and Naughty Boy Kitchen, I designed the spatial graphics, menus, logos and packaging.',
+    gallery: [
+      
+      { image: '3', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '8', type: 'screenshot', height: '2016', width: '1512' },
+      { image: '9', type: 'screenshot', height: '2016', width: '1512' },
+      { image: '10', type: 'screenshot', height: '2016', width: '1512' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+    ]
+  })
+
+  +template({
+    id: 'turning-tide',
+    title: 'Turning Tide',
+    company: 'London Festival of Archetecture',
+    role: 'Designer',
+    technologies: 'Graphic Design',
+    description: 'The turning tide was a conceptual bench designed as part of a national competition run by the London festival of Architecture.  I and my brother collaborated on the winning design which we were then commissioned to build and install within a month.The theme of the design was "act". Our design interpreted this theme by focusing on the organic transition between mental states, and symbolising the transformative power of rest and reflection on the mind. We wanted the design to portray are fluid change in thought, often the precursor to an act. To connect this idea with the community, we incorporated cages on the sides of the bench, allowing park-goers to leave messages on rocks for future visitors.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '5', type: 'screenshot', height: '1080', width: '810' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1440' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1440' }
+    ]
+  })
+
+  +template({
+    id: 'floema',
+    title: 'AMAZING GRACE',
+    company: 'Amazing Grace',
+    role: 'Designer',
+    technologies: 'Graphic Design',
+    description: 'This is a description of the POPEYES project showcasing my role and contributions.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' }
+    ]
+  })
+
+  +template({
+    id: 'idris-elba',
+    title: 'Idris Elba',
+    company: 'The Fitting Room Agency',
+    role: 'Designer',
+    technologies: 'Web Design, Graphic Design, Motion Design',
+    description: 'As a Senior Designer at The Fitting Room, I worked with Idris Elba on multiple design projects including web design, social content and management and event design for his personal brand, his wine company Port Noire, and film company Green Door Pictures and film premiere parties such as "The Harder They Fall.',
+
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+  
+    ]
+  })
+
+  +template({
+    id: 'stoli',
+    title: 'Stoli Vodka',
+    company: 'Stolichnaya',
+    role: 'Designer',
+    technologies: 'Graphic Design',
+    description: 'Stoli is a company with rich history but felt that the brand had become out of touch and sought after a activation to engage with younger audiences, namely Gen Z and the LGBTQAI+ community. Be the Spirit was a activation with a collaboration with "Drag Queen Story Time". As the creative design lead I was in charge of reaseach, brand idedntity and assets for the activation.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1304', width: '986' },
+      { image: '5', type: 'screenshot', height: '1304', width: '986' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '3204', width: '1852' },
+      { image: '4', type: 'screenshot', height: '1512', width: '2016' },
+
+    ]
+  })
+
+  +template({
+    id: 'ocb',
+    title: 'Old Compton Brasserie',
+    company: 'Maxwells Group',
+    role: 'Designer',
+    technologies: 'Concept Design, Graphic Design',
+    description: 'Old Compton Brasserie is a luxury restaurant based in Soho. For the launch of the restaurant our design team was tasked with creating a brand campaign with a limited time and budget to create some attention. While the restaurant was under construction, our design team devised a plan to cover the front paneling with custom made posters made on photoshop. The goal was to emulate the excitement of festival and event posters and being as attention grabbing as possible. we worked with London street artist Anna Lauri, who created the center mural piece.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '810' }
+    ]
+  })
+
+  +template({
+    id: 'trolli',
+    title: 'ETEFY',
+    company: 'Etefy',
+    role: 'Graphic Design',
+    technologies: 'Editorial Design',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+    ]
+  })
+
+  +template({
+    id: 'jack-daniels',
+    title: ' JACK DANIELS',
+    company: 'Maxwells Group',
+    role: 'Graphic Designer',
+    technologies: 'Graphic Design, Concept Designs',
+    description: 'The Covent Garden based venue Roadhouse in collaboration with American Whiskey company Jack Daniels commissioned the vinyl skin design for a Photo-booth being installed in the venue.',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '660' },
+      { image: '5', type: 'screenshot', height: '1080', width: '807' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1629' },
+    ]
+  })
+
+  +template({
+    id: 'ffmag',
+    title: '54 Magazine',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    description: 'Shaped the magazine’s social media presence through strategic content creation, growing the Instagram and Facebook following to 10.2K. Traveled internationally to capture event coverage in London and Zambia, while maintaining an organized content calendar. Collaborated with the creative team to evolve the magazine’s visual identity, developing comprehensive brand guidelines and ensuring consistent, high-quality design across all platforms',
+    ,
+
+    gallery: [
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '1', type: 'screenshot', height: '1080', width: '1620' },
+      { image: '2', type: 'screenshot', height: '1350', width: '1080' },
+      { image: '3', type: 'screenshot', height: '905', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '800' },
+    ],
+  })
+
+  +template({
+    id: 'inbound',
+    title: 'INBOUND',
+    company: 'Active Theory',
+    role: 'Interactive Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://dreamwave.tech/inbound-2020'
+  })
+
+  +template({
+    id: 'redis',
+    title: 'REDIS',
+    company: 'Active Theory',
+    role: 'Interactive Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://dreamwave.tech/redis-conf'
+  })
+
+  +template({
+    id: 'kaleidoz',
+    title: 'KALEIDOZ',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://kaleidozdesign.com/'
+  })
+
+  +template({
+    id: 'erika-moreira',
+    title: 'ERIKA MOREIRA',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'Canvas · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://erikamoreira.co/'
+  })
+
+  +template({
+    id: 'bruno-arizio',
+    title: 'BRUNO ARIZIO',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.behance.net/gallery/89455165/Bruno-Arizio-Portfolio'
+  })
+
+  +template({
+    id: 'dominic-berzins',
+    title: 'DOMINIC BERZINS',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://dominic.bz/'
+  })
+
+  +template({
+    id: 'pagethink',
+    title: 'PAGETHINK',
+    company: 'Antinomy',
+    role: 'Creative Developer',
+    technologies: 'WordPress · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.pagethink.com/'
+  })
+
+  +template({
+    id: 'neoway',
+    title: 'NEOWAY',
+    company: 'SOLID',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.linkedin.com/posts/rise-new-york_independent-advertising-agency-activity-6553695483888451584-ejxI/'
+  })
+
+  +template({
+    id: 'cult',
+    title: 'CULT',
+    company: 'Freelance',
+    role: 'Creative Developer',
+    technologies: 'WordPress · Canvas · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '10', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '11', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '12', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '13', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '14', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '15', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://cultldn.com/'
+  })
+
+  +template({
+    id: 'movida',
+    title: 'MOVIDA',
+    company: 'Royalpixel',
+    role: 'Creative Developer',
+    technologies: 'Phaser · JavaScript · React Native',
+    label: 'App Store URL',
+    gallery: [
+      { image: '1', type: 'portrait', height: '667', width: '375' },
+      { image: '2', type: 'portrait', height: '667', width: '375' },
+      { image: '3', type: 'portrait', height: '667', width: '375' },
+      { image: '4', type: 'portrait', height: '667', width: '375' },
+      { image: '5', type: 'portrait', height: '667', width: '375' },
+      { image: '6', type: 'portrait', height: '667', width: '375' },
+      { image: '7', type: 'portrait', height: '667', width: '375' },
+      { image: '8', type: 'portrait', height: '667', width: '375' },
+      { image: '9', type: 'portrait', height: '667', width: '375' },
+    ],
+    link: 'https://apps.apple.com/br/app/movida-kids/id1337822375'
+  })
+
+  +template({
+    id: 'lufthansa-2',
+    title: 'LUFTHANSA',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.unit9.com/project/lufthansa-sayyestotheworld-2/'
+  })
+
+  +template({
+    id: 'tiaa',
+    title: 'TIAA',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'Canvas · React · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '10', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '11', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '12', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '13', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '14', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '15', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '16', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.unit9.com/project/tiaa-difference-maker/'
+  })
+
+  +template({
+    id: 'lufthansa-1',
+    title: 'LUFTHANSA',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.unit9.com/project/lufthansa-sayyestotheworld/'
+  })
+
+  +template({
+    id: 'shell',
+    title: 'SHELL',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'http://shell-bts-master.thisisnotbranded.com/ontopoftheworld/en'
+  })
+
+  +template({
+    id: 'corvette',
+    title: 'CORVETTE',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.unit9.com/project/corvette-modules/'
+  })
+
+  +template({
+    id: 'nike',
+    title: 'NIKE',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'Phaser · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'landscape', height: '414', width: '736' },
+      { image: '2', type: 'landscape', height: '414', width: '736' },
+      { image: '3', type: 'landscape', height: '414', width: '736' },
+      { image: '4', type: 'landscape', height: '414', width: '736' },
+      { image: '5', type: 'landscape', height: '414', width: '736' },
+      { image: '6', type: 'landscape', height: '414', width: '736' },
+      { image: '7', type: 'landscape', height: '414', width: '736' },
+      { image: '8', type: 'landscape', height: '414', width: '736' },
+      { image: '9', type: 'landscape', height: '414', width: '736' },
+      { image: '10', type: 'landscape', height: '414', width: '736' },
+    ],
+    link: 'http://nikecityfast.co.uk/'
+  })
+
+  +template({
+    id: 'airbnb',
+    title: 'AIRBNB',
+    company: 'UNIT9',
+    role: 'Creative Developer',
+    technologies: 'Angular · Redux · JavaScript',
+    label: 'Case Study URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '7', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://www.unit9.com/project/airbnb-family-trips/'
+  })
+
+  +template({
+    id: 'discovery-kids',
+    title: 'DISCOVERY KIDS',
+    company: 'Royalpixel',
+    role: 'Creative Developer',
+    technologies: 'Phaser · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '650', width: '1156' },
+      { image: '2', type: 'screenshot', height: '650', width: '1156' },
+      { image: '3', type: 'screenshot', height: '650', width: '1156' },
+      { image: '4', type: 'screenshot', height: '650', width: '1156' },
+      { image: '5', type: 'screenshot', height: '650', width: '1156' },
+      { image: '6', type: 'screenshot', height: '650', width: '1156' },
+      { image: '7', type: 'screenshot', height: '650', width: '1156' },
+      { image: '8', type: 'screenshot', height: '650', width: '1156' },
+      { image: '9', type: 'screenshot', height: '650', width: '1156' },
+      { image: '10', type: 'screenshot', height: '650', width: '1156' },
+      { image: '11', type: 'screenshot', height: '650', width: '1156' },
+      { image: '12', type: 'screenshot', height: '650', width: '1156' },
+    ],
+    link: 'https://lhbizarro.github.io/doki/game-es/'
+  })
+
+  +template({
+    id: 'rock-in-rio',
+    title: 'ROCK IN RIO',
+    company: 'Royalpixel',
+    role: 'Creative Developer',
+    technologies: 'WebGL · GLSL · JavaScript',
+    label: 'Live URL',
+    gallery: [
+      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    link: 'https://believe.earth/earth/'
+  })
+

@@ -1,0 +1,63 @@
+.intro {
+    @extend %cover;
+    @extend %page;
+   z-index: 10000;
+    overflow: hidden;
+    transition: opacity 0.4s 1s ease, visibility 0.5s ease;
+    background-color: rgb(17, 17, 17);
+  
+    &--active {
+        @extend %page--active;
+        
+    }
+
+     // &:after {
+  //   background: #f0f;
+  //   content: '';
+  //   height: 100%;
+  //   left: 50%;
+  //   position: absolute;
+  //   transform: translateX(-50%);
+  //   width: 1.5rem;
+  // }
+  }
+  
+
+  
+  .intro__content {
+    @extend %content;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    text-align: center;
+    max-height: calc(100vh - 40px); // Adjust 40px to your desired total vertical margin
+    margin-top: 20px; 
+    margin-bottom: 20px; 
+    overflow: hidden; 
+    
+    @include media('<=phone') {
+      padding: 1rem 0 1em;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      text-align: center;
+      max-height: calc(100vh - 40px); // Adjust 40px to your desired total vertical margin
+      overflow: hidden; 
+      
+    }
+  
+  
+  .intro__wrapper {
+    margin: auto;
+    width: 70vw;
+    @include media('<=phone') {
+      width: 95%;
+    }
+  
+ }}
+ 
+  
