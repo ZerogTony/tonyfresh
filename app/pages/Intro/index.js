@@ -2,6 +2,7 @@
 import Page from 'components/Page'
 
 import FontFaceObserver from 'fontfaceobserver'
+import GSAP from 'gsap'
 
 import each from 'lodash/each'
 
@@ -57,10 +58,12 @@ export default class extends Page {
 
     font.load().then(_ => {
       this.onResize()
+      this.setupInfiniteScroll()
     }).catch(_ => {
       this.onResize()
+      this.setupInfiniteScroll()
     })
-  
+
   }
 
 
@@ -78,6 +81,65 @@ export default class extends Page {
    */
   update() {
     super.update();
+  }
+
+  setupInfiniteScroll() {
+    const container = document.querySelector('#infinite-scroll-text');
+    if (!container) return;
+
+    const words = container.querySelectorAll('.words');
+    if (words.length < 2) return;
+
+    const splitWords = Array.from(words).map(word => {
+      const chars = word.textContent.trim().split('');
+      word.innerHTML = '';
+      const spans = chars.map(char => {
+        const span = document.createElement('span');
+        span.textContent = char;
+        word.appendChild(span);
+        return span;
+      });
+      return { chars: spans };
+    });
+
+    const wordHeight = words[0].offsetHeight;
+    const offset = 40;
+    const totalHeight = splitWords[0].chars.length * (wordHeight - offset);
+
+    splitWords[1].chars.forEach(char => {
+      GSAP.set(char, { y: totalHeight });
+    });
+
+    this.infiniteScrollAnimations = [];
+
+    splitWords.forEach(splitWord => {
+      splitWord.chars.forEach((char, index) => {
+        const anim = GSAP.to(char, {
+          y: `-=${totalHeight}`,
+          repeat: -1,
+          duration: 0.3,
+          ease: 'none',
+          delay: index * 0.3 / splitWords[0].chars.length,
+          paused: true,
+          timeScale: 0
+        });
+
+        this.infiniteScrollAnimations.push(anim);
+      });
+    });
+
+    container.addEventListener('mouseover', () => {
+      this.infiniteScrollAnimations.forEach(anim => {
+        anim.resume();
+        GSAP.to(anim, { timeScale: 1, duration: 0.5 });
+      });
+    });
+
+    container.addEventListener('mouseout', () => {
+      this.infiniteScrollAnimations.forEach(anim => {
+        GSAP.to(anim, { timeScale: 0, duration: 0.5 });
+      });
+    });
   }
 }
 
