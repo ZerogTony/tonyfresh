@@ -93,6 +93,10 @@ export default class extends Component {
 
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease)
 
+    if (!this.isDown && Math.abs(this.scroll.current - this.scroll.target) < 1) {
+      this.scroll.target = Math.round(this.scroll.target / this.height) * this.height
+    }
+
     const scrollClamp = Math.round(this.scroll.current % this.heightTotal)
 
     if (this.scroll.current < this.scroll.last) {

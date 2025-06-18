@@ -81,28 +81,45 @@ export default class extends Page {
   }
 }
 
-document.querySelector('.intro__enter a').addEventListener('click', function(event) {
-  // Prevent the default link action
-  event.preventDefault();
+const introLink = document.querySelector('.intro__enter a');
+const introHeader = document.querySelector('.intro__header');
 
-  // Get the href attribute of the link
-  var href = this.getAttribute('href');
+let originalIntroClick;
 
-  // Add reverse animation to header title
-  var headerTitle = document.querySelector('.intro__header__title');
-  headerTitle.classList.add('intro__header__title--reverse');
+function handleIntroExit(event) {
+  event && event.preventDefault();
 
-  // Add reverse animation to image
-  var image = document.querySelector('.intro__image');
-  image.classList.add('intro__image--reverse');
+  const href = introLink.getAttribute('href');
 
-  // Add reverse animation to description
-  var description = document.querySelector('.intro__description');
-  description.classList.add('intro__description--reverse');
+  // Cancel the immediate handler
+  introLink.onclick = null;
 
-  // Redirect after a delay
-  setTimeout(function() {
-    window.location.href = home;
-  }, 1500); // Adjust this delay based on your longest animation duration
+  // Reverse animations
+  const headerTitle = document.querySelector('.intro__header__title');
+  if (headerTitle) headerTitle.classList.add('intro__header__title--reverse');
+
+  const image = document.querySelector('.intro__image');
+  if (image) image.classList.add('intro__image--reverse');
+
+  const description = document.querySelector('.intro__description');
+  if (description) description.classList.add('intro__description--reverse');
+
+  setTimeout(() => {
+    if (typeof originalIntroClick === 'function') {
+      originalIntroClick.call(introLink, event);
+    } else if (href) {
+      window.location.href = href;
+    }
+  }, 1500);
+}
+
+// Wait for App to attach its own click handler before overriding
+setTimeout(() => {
+  originalIntroClick = introLink.onclick;
+  introLink.onclick = handleIntroExit;
+
+  if (introHeader) {
+    introHeader.addEventListener('click', handleIntroExit);
+  }
 });
 
