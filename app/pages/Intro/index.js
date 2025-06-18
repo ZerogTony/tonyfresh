@@ -98,8 +98,6 @@ function handleIntroExit(event) {
   const headerTitle = document.querySelector('.intro__header__title');
   if (headerTitle) headerTitle.classList.add('intro__header__title--reverse');
 
-  const image = document.querySelector('.intro__image');
-  if (image) image.classList.add('intro__image--reverse');
 
   const description = document.querySelector('.intro__description');
   if (description) description.classList.add('intro__description--reverse');
