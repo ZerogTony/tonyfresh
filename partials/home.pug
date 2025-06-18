@@ -1,8 +1,17 @@
-mixin template(id, title, direction)
+mixin template(id, title, direction, number, description)
   li.home__item(class=`home__item--${id}`)
     a.home__link(href=`/case/${id}`)
-      span.home__link__wrapper=title
-        img.home__link__media(alt=`${title} Project Preview` data-direction=direction data-src=`/projects/${id}.jpg` data-src-webp=`/projects/${id}.webp`)
+      img.home__link__media(
+        alt=`${title} Project Preview`,
+        data-direction=direction,
+        data-src=`/projects/${id}.jpg`,
+        data-src-webp=`/projects/${id}.webp`
+      )
+      span.home__link__wrapper
+        span.home__link__number= number
+        span.home__link__title= title
+        span.home__link__description= description
+
 
 section.home
   .home__background
@@ -12,17 +21,17 @@ section.home
   .home__wrapper
     ul.home__list
 
-      +template('ffmag', '54 Magazine', 'left')
-      +template('sazy', 'Sazy', 'right')
-      +template('popeyes', 'Popeyes', 'left')
-      +template('spotify', 'Spotify', 'right')
-      +template('boxpark', 'Boxpark', 'left')
-      +template('turning-tide', 'Turning Tide', 'right')
-      +template('idris-elba', 'Idris Elba', 'right')
-      +template('stoli', 'Stoli Vodka', 'left')
-      +template('ocb', 'Old Compton', 'right')
-      +template('jack-daniels', '   Jack Daniels   ', 'left')
-      +template('inbound', 'INBOUND', 'right')
+      +template('ffmag', '54 Magazine', 'left', '01', 'African culture & lifestyle publication')
+      +template('sazy', 'Sazy', 'right', '02', 'Modern furniture and homeware branding')
+      +template('popeyes', 'Popeyes', 'left', '03', 'Bold UK launch visuals for fried chicken chain')
+      +template('spotify', 'Spotify', 'right', '04', 'Brand identity + UI for Wrapped campaign')
+      +template('boxpark', 'Boxpark', 'left', '05', 'Retail & food park brand refresh')
+      +template('turning-tide', 'Turning Tide', 'right', '06', 'Sustainable living awareness campaign')
+      +template('idris-elba', 'Idris Elba', 'right', '07', 'Visual direction for Porte Noire wine label')
+      +template('stoli', 'Stoli Vodka', 'left', '08', 'Heritage vodka brand with modern twist')
+      +template('ocb', 'Old Compton', 'right', '09', 'Visual identity for London restaurant')
+      +template('jack-daniels', 'Jack Daniels', 'left', '10', 'Experimental visuals for heritage brand')
+      +template('inbound', 'INBOUND', 'right', '11', 'Event branding + digital materials')
       
      
   div.fullscreen-div

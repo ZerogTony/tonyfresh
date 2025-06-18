@@ -74,7 +74,9 @@
 }
 
 .home__list {
-  
+  display: flex;
+  flex-direction: column;
+  gap: 40rem; // 👈 apply spacing *between* items only
   
 
 }
@@ -82,80 +84,118 @@
 .home__item {
   font: 7rem/9 $font-neue-montreal;
   white-space: nowrap;
-
+  height: 100vh; // makes each item fill the full viewport height
+  display: flex;
+  align-items: center; // vertically centers the .home__link
+  margin-bottom: 0; // not needed anymore since spacing is handled by height
 
   @include media('<=phone') {
     font: 2rem/9 $font-neue-montreal;
-
-   
-    
+    height: auto; // allow natural flow on small screens
+    padding: 10rem 0;
   }
 }
 
 
 
-.home__link {
-  display: block;
-  text-align: center;
 
-  
+
+.home__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10vw; // 👈 this gives both sides margin from edge
+  gap: 5rem;
+  @include media('<=phone') {
+    flex-direction: column;
+    text-align: center;
+    padding: 0 2rem; // tighter on small screens
   
 }
 
+
+
+
+
 .home__link__wrapper {
-  display: inline-block;
-  margin-top: 60rem;
-  position: flex;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 3rem; // was pushing it too far down
   min-width: 72.3rem;
+}
+
+
+  .home__link__number {
+    display: block;
+    font-size:5rem;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.5;
+    margin-top: 0.5rem; // or even 0 if you want them super snug
+  }
+
+  .home__link__title {
+    display: block;
+    font-size: 9rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+
+  .home__link__description {
+    display: block;
+    font-size: 3rem;
+    font-weight: 300;
+    opacity: 0.7;
+    line-height: 1.4;
+    max-width: 50rem;
+    margin-bottom: 1rem;
+
+  }
 
   @include media('<=phone') {
     min-width: 28.3rem;
     margin-top: 20rem;
 
+    .home__link__title {
+      font-size: 2rem;
+    }
+
+    .home__link__description {
+      font-size: 1.2rem;
+    }
   }
 }
-  
+
 
 
 .home__link__media {
   background: $color-pine-tree;
-  bottom: 50%;
+  flex-shrink: 0; // 🚫 don't let it get squished
   height: 50.3rem;
-  margin: 0 1rem;
-  object-fit: cover;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
   width: 68.3rem;
+  overflow: hidden;
+  object-fit: cover;
+  opacity: 0; // or keep your transition if needed
+  position: static; // this is the key change
 
+  // Direction-based alignment
   &[data-direction="left"] {
-    left: 50%;
-    transform: translate(-50%, 50%);
+    order: 2;
+    margin-left: 4rem;
   }
 
   &[data-direction="right"] {
-    right: 50%;
-      transform: translate(50%, 50%);
+    order: 1;
+    margin-right: 4rem;
   }
-
-
-
 
   @include media('<=phone') {
-    bottom: 50%;
-    margin: 0;
-    height: 10.3rem;
     width: 18.3rem;
-
-    &[data-direction="left"] {
-      right: 50%;
-      transform: translate(-50%, 50%);
-    }
-
-    &[data-direction="right"] {
-      left: 50%;
-      transform: translate(-50%, 50%);
-    }
+    height: 10.3rem;
+    margin: 0;
+    order: unset;
   }
 }
+
 
