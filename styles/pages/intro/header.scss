@@ -72,26 +72,6 @@
 
 
 
-.image-wrapper {
-  position: relative;
-  z-index: 2;
-  width: 100%; // Ensures the wrapper takes the full width
-  display: flex;
-  justify-content: center; // Centers the image horizontally
-  align-items: center; // Centers the image vertically
-  margin-top: -12rem; // Adds some space between the title and the image
-  overflow: hidden;
-
-
-
-  @include media('<=phone') {
-    margin-top: -3rem;
-      
-      
-    }
-}
-
-
 
 
 .intro__enter {
