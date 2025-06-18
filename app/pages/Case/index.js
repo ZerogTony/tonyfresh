@@ -20,77 +20,9 @@ export default class extends Page {
     });
 
     this.create();
-    this.addEventListeners();
   }
 
-  addEventListeners() {
-    const toggleButtons = document.querySelectorAll('.case__description__toggle');
-    toggleButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const caseId = button.getAttribute('data-case-id');
-        this.toggleDescription(caseId);
-      });
-    });
 
-    this.observeDescriptions();
-  }
-
-  toggleDescription(caseId) {
-    const button = document.querySelector(`button[data-case-id="${caseId}"]`);
-    const description = document.getElementById(caseId).querySelector('.case__description');
-  
-    if (description.style.display === 'none' || description.style.display === '') {
-      description.style.display = 'block';
-      button.style.display = 'none';
-    } else {
-      description.style.display = 'none';
-      button.style.display = 'block';
-    }
-  }
-
-  observeDescriptions() {
-    const descriptions = document.querySelectorAll('.case__description');
-  
-    const observerCallback = (entries) => {
-      entries.forEach(entry => {
-        const id = entry.target.id;
-        console.log(`Observing: ${id}, isIntersecting: ${entry.isIntersecting}`);
-        if (id && !entry.isIntersecting) {
-          this.toggleDescriptionOff(id);
-        }
-      });
-    };
-  
-    const observer = new IntersectionObserver(observerCallback, { threshold: 0.1 });
-    descriptions.forEach(description => {
-      if (description.id) { // Ensure the element has an ID
-        observer.observe(description);
-      } else {
-        console.error('Description element is missing an ID:', description);
-      }
-    });
-  }
-  
-
-  toggleDescriptionOff(caseId) {
-    console.log('Toggling off description for:', caseId);
-  
-    // Find the description element
-    const description = document.getElementById(caseId);
-    console.log(`Looking for description with ID: ${caseId}, found:`, description);
-  
-    // The caseId for the button is the part before '-description'
-    const buttonCaseId = caseId.split('-')[0];
-    const button = document.querySelector(`button[data-case-id="${buttonCaseId}"]`);
-    console.log(`Looking for button with data-case-id: ${buttonCaseId}, found:`, button);
-  
-    if (description && button) {
-      description.style.display = 'none';
-      button.style.display = 'block';
-    } else {
-      console.error('Could not find elements for:', caseId);
-    }
-  }
   
   
   /**
@@ -156,12 +88,3 @@ export default class extends Page {
   }
 }
 
-
-function toggleDescription(caseId) {
-  var descriptionElement = document.getElementById(caseId).querySelector('.case__description');
-  if (descriptionElement.style.display === 'none') {
-      descriptionElement.style.display = 'block'; // or 'flex'
-  } else {
-      descriptionElement.style.display = 'none';
-  }
-}
