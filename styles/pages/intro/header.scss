@@ -137,26 +137,34 @@
 }
 
 
-  .intro__enter {
-    position: relative;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 5rem; // Adjust the font size as needed
-    color: white; // Use your color variable
-    text-transform: uppercase;
-    font-family: $font-neue-montreal; // Use your font variable
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    cursor: pointer; // If it's clickable
-     z-index: 3;
+.intro__enter {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 100%); // Start off-screen (below)
+  opacity: 0;
+  font-size: 5rem;
+  color: white;
+  text-transform: uppercase;
+  font-family: $font-neue-montreal;
+  transition: transform 3.5s 2s $ease-out-expo, opacity 3.5s 2s $ease-out-expo;
+  cursor: pointer;
+  z-index: 3;
 
-     animation: fadeInOut 3s ease-in-out infinite;
-
-    @include media('<=phone') {
-      font-size: 1.5rem; // Smaller font size for phones
-    }
+  @include media('<=phone') {
+    font-size: 1.5rem;
   }
-  
+
+  &:hover {
+    transform: translate(-50%, 0) scale(1.1);
+  }
+}
+
+.intro--active .intro__enter {
+  transform: translate(-50%, 0); // Final position
+  opacity: 1;
+}
+
 
 
 .intro__description {
