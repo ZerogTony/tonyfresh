@@ -128,30 +128,6 @@
     
 }}
 
-.case__description__toggle {
-  font-size: 3.5rem;
-  line-height: 1.5;
-  width: 100%;
-  margin: 5rem auto; // Adjusts vertical spacing
-  text-align: center;
-  cursor: pointer; // Suggests that it's clickable
-  opacity: 0;
-  transition: opacity 0.4s 1s ease;
-
-  .case--active & {
-    opacity: 1;
-  }
-
-
-  &:hover {
-    text-decoration: underline; 
-  }
-
-  @include media('<=phone') {
-    
-    font-size: 1rem;
-}}
-
 .case__description {
   font-size: 3.5rem;
   line-height: 1.5;

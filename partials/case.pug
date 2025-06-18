@@ -23,9 +23,7 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
         | #[strong.case__information__detail__title Practice]
         | #{technologies}
 
-    button.case__description__toggle(data-case-id=id) Read Description
-
-    .case__description(id=`${id}-description`, style='display: none;')
+    .case__description(id=`${id}-description`)
       p.case__description__text= description
 
     .case__gallery
