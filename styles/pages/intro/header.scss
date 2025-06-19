@@ -3,7 +3,9 @@
   z-index: 1;
   color: $color-pine-tree;
   text-align: center;
+
   @include media('<=phone') {
+    // Add mobile-specific styles if needed
   }
 }
 
@@ -11,7 +13,8 @@
   font: 6rem/1 $font-ampersand;
   display: block;
   text-align: center;
-  color: rgb(255, 255, 255);
+  color: white;
+
   @include media('<=phone') {
     font-size: 10.5rem;
   }
@@ -19,7 +22,7 @@
 
 .intro__header__title__text {
   display: flex;
-  justify-content:center;
+  justify-content: center;
   overflow: hidden;
 
   span {
@@ -37,8 +40,6 @@
     }
   }
 }
-
-
 
 .intro--active {
   .intro__header__title__text span {
@@ -60,25 +61,28 @@
   .intro__header__title__text:nth-child(4) span {
     transition: transform 3.5s 0.6s $ease-out-expo;
   }
+
+  .intro__enter {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+
+  .intro__description {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .intro__header__title--reverse {
-  /* Define your reverse animation properties here */
-  /* Example: */
   transform: translateY(-130%);
   transition: transform 0.4s ease;
 }
-
-
-
-
-
 
 .intro__enter {
   position: relative;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, 100%); // Start off-screen (below)
+  transform: translate(-50%, 100%);
   opacity: 0;
   font-size: 5rem;
   color: white;
@@ -97,55 +101,29 @@
   }
 }
 
-.intro--active .intro__enter {
-  transform: translate(-50%, 0); // Final position
-  opacity: 1;
-}
-
-
-
-
 .intro__description {
   display: block;
-  text-align: justify center; // Centers the text horizontally
-  padding: 3rem 15vw; // Adds vertical padding above and below the text
-  font-family: $font-neue-montreal; // Uses your font variable
-  font-size: 3rem; // Example font size, adjust as needed
+  text-align: center;
+  padding: 3rem 15vw;
+  font-family: $font-neue-montreal;
+  font-size: 3rem;
   text-transform: uppercase;
-  color:rgb(255, 255, 255);
+  color: white;
   transform: translateY(100%);
+  opacity: 0;
   transition: transform 2s 1.6s $ease-out-expo;
-  
-  
 
   @include media('<=phone') {
-  display: block;
-  text-align: justify; // Centers the text horizontally
-  text-align-last: justify;
-  text-justify: inter-word;
-  padding: 3rem 10rem; // Adds vertical padding above and below the text
-  font-family: $font-neue-montreal; // Uses your font variable
-  font-size: 0.9rem; // Example font size, adjust as needed
-  text-transform: uppercase;
-  overflow: hidden;
-    
-    
+    text-align: justify;
+    text-align-last: justify;
+    text-justify: inter-word;
+    padding: 3rem 10rem;
+    font-size: 0.9rem;
+    overflow: hidden;
   }
-
-}
-
-
-.intro--active {
-.intro__description {
-  transform: translateY(0); // Move to the final position
-  opacity: 1; // Make the text fully visible
-  
-}
 }
 
 .intro__description--reverse {
-  /* Define your reverse animation properties here */
-  /* Example: */
   transform: translateY(100%);
   opacity: 0;
   transition: transform 0.5s ease, opacity 0.5s ease;
