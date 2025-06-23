@@ -18,7 +18,7 @@ export default class extends Component {
     this.transformPrefix = Prefix('transform')
 
     this.scroll = {
-      ease: 0.4,
+      ease: 0.9,
       position: 0,
       current: 0,
       target: 0,

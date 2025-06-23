@@ -65,6 +65,9 @@ class App {
     this.addLinksEventsListeners()
 
     this.onResize()
+    
+    // Start the update loop immediately
+    this.onInteract()
   }
 
   createCanvas () {
