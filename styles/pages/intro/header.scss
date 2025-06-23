@@ -10,7 +10,7 @@
 }
 
 .intro__header__title {
-  font: 6rem/1 $font-ampersand;
+  font: 15rem/1 $font-ampersand;
   display: block;
   text-align: center;
   color: white;
@@ -24,6 +24,7 @@
   display: flex;
   justify-content: center;
   overflow: hidden;
+  margin-bottom: 35vh;
 
   span {
     transform: translateY(100%);
@@ -53,7 +54,7 @@
   }
 
   .intro__enter {
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%);
     opacity: 1;
   }
 
@@ -106,6 +107,7 @@
   transform: translateY(100%);
   opacity: 0;
   transition: transform 2s 1.6s $ease-out-expo;
+  margin-top: 30;
 
   @include media('<=phone') {
     text-align: justify;
