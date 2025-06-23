@@ -101,6 +101,10 @@ function handleIntroExit(event) {
 
   const description = document.querySelector('.intro__description');
   if (description) description.classList.add('intro__description--reverse');
+  
+  const introEnter = document.querySelector('.intro__enter');
+  if (introEnter) introEnter.classList.add('intro__enter--reverse');
+
 
   setTimeout(() => {
     if (typeof originalIntroClick === 'function') {
@@ -108,7 +112,7 @@ function handleIntroExit(event) {
     } else if (href) {
       window.location.href = href;
     }
-  }, 1500);
+  }, 10);
 }
 
 // Wait for App to attach its own click handler before overriding
