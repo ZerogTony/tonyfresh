@@ -56,6 +56,8 @@ export default class extends Page {
       image.decode().then(_ => {
         media.classList.add(this.classes.mediaActive)
         media.appendChild(image)
+                this.onResize()
+
       })
     })
 
