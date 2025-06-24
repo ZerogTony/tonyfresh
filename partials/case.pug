@@ -2,7 +2,7 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
   article.case(id=id)
     header.case__header
       h3.case__title
-        span.case__title__text= title
+                span.case__title__text= title
 
       figure.case__media
         img.case__media__image(
@@ -27,16 +27,6 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
       p.case__description__text= description
 
     .case__gallery
-      // VIDEOS
-      if videos
-        each videoFile in videos
-          .case__gallery__media.video-container
-            // NOTE: We add a .video-box class here so only videos get flexed
-            .case__gallery__media__box.video-box
-              video.case__media__video(autoplay loop muted playsinline)
-                source(src=`/case/${id}/${videoFile}`, type='video/mp4')
-                | Your browser does not support the video tag.
-
       // IMAGES
       each content in gallery
         .case__gallery__media.image-container
@@ -50,6 +40,18 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
               data-src-webp=`/case/${id}/${content.image}.webp`
               style=`padding-top: ${content.height / content.width * 100}%;`
             )
+
+      // VIDEOS
+      if videos
+        each videoFile in videos
+          .case__gallery__media.video-container
+            // NOTE: We add a .video-box class here so only videos get flexed
+            .case__gallery__media__box.video-box
+              video.case__media__video(autoplay loop muted playsinline)
+                source(src=`/case/${id}/${videoFile}`, type='video/mp4')
+                | Your browser does not support the video tag.
+
+
 
 
 
@@ -292,15 +294,13 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     label: 'Case Study URL',
     description: 'Led visual design at this growing startup, refining and strengthening the company’s brand identity through email campaigns and custom label design. Directed product photoshoots and managed post-production, while maintaining brand consistency through detailed guidelines. Created designs for our website and marketing materials, ensuring a cohesive look and feel across all channels',
     videos: [
-    'Soothe.webm.webm',
+    'Soothe.webm',
   ],
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '640' },
       { image: '2', type: 'screenshot', height: '2719x', width: '800' },
       { image: '3', type: 'screenshot', height: '1080', width: '1920' },
       { image: '4', type: 'screenshot', height: '1080', width: '870' },
-      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
     ],
 
   })
