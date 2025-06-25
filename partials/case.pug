@@ -27,7 +27,6 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
       p.case__description__text= description
 
       .case__gallery
-        a.case__back(href="/home") Back to Work
 
         // IMAGES
         each content in gallery
@@ -52,7 +51,7 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
                   source(src=`/case/${id}/${videoFile}`, type='video/mp4')
                   | Your browser does not support the video tag.
 
-a.case__back(href="/home") Back to Work
+    a.case__back(href="/home") Back to Work
 
 
 
