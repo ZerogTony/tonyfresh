@@ -139,7 +139,7 @@
   
   .case--active & {
     opacity: 1;
-    max-height: 1000px;
+    max-height: none;
   }
 
   @include media('<=phone') {
