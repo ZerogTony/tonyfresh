@@ -24,7 +24,8 @@
   display: flex;
   justify-content: center;
   overflow: hidden;
-  margin-bottom: 35vh;
+  margin-top: 30vh;
+  margin-bottom: 15vh;
 
   span {
     transform: translateY(100%);
@@ -73,6 +74,7 @@
   position: relative;
   top: 50%;
   left: 50%;
+  margin-top: 30rem;
   transform: translate(-50%, 100%);
   opacity: 0;
   font-size: 5rem;
@@ -99,7 +101,8 @@
 .intro__description {
   display: block;
   text-align: center;
-  padding: 3rem 15vw;
+  margin: 3rem 15vw;
+  overflow: hidden;
   font-family: $font-neue-montreal;
   font-size: 3rem;
   text-transform: uppercase;
@@ -107,7 +110,6 @@
   transform: translateY(100%);
   opacity: 0;
   transition: transform 2s 1.6s $ease-out-expo;
-  margin-top: 30;
 
   @include media('<=phone') {
     text-align: justify;
