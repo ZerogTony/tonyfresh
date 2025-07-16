@@ -16,7 +16,7 @@
   color: white;
 
   @include media('<=phone') {
-    font-size: 10.5rem;
+    font-size: 3rem;
   }
 }
 
@@ -37,6 +37,8 @@
   }
 
   @include media('<=phone') {
+
+    margin-top: 3vh;
     &:not(:first-child) {
       margin-top: -1rem;
     }
@@ -87,6 +89,7 @@
 
   @include media('<=phone') {
     font-size: 1.5rem;
+    margin-top: 1rem;
   }
 
 }
@@ -112,17 +115,15 @@
   transition: transform 2s 1.6s $ease-out-expo;
 
   @include media('<=phone') {
-    text-align: justify;
-    text-align-last: justify;
-    text-justify: inter-word;
-    padding: 2rem 1.5rem;
-    font-size: 0.9rem;
-    overflow: visible;
+    margin: 20rem 15vw;
+    font-size: 2rem;
+    overflow: hidden;
   }
 }
 
 .intro__description--reverse {
   transform: translateY(100%);
+  overflow: hidden;
   opacity: 0;
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
