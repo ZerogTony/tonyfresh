@@ -104,6 +104,12 @@
   padding: 0 10vw;
   gap: 5rem;
 
+  &:hover {
+    .home__link__title {
+      letter-spacing: 0.2em;
+    }
+  }
+
   @include media('<=phone') {
     flex-direction: column;
     justify-content: center;
@@ -134,6 +140,9 @@
     font-weight: 600;
     line-height: 1;
     margin-bottom: 1rem;
+    letter-spacing: 0;
+    transition: letter-spacing 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
   }
 
   .home__link__description {
