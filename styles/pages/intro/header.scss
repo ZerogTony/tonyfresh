@@ -1,12 +1,48 @@
+.intro {
+  @extend %cover;
+  @extend %page;
+  z-index: 10000;
+  overflow: hidden;
+  background-color: rgb(17, 17, 17);
+}
+
+.intro__content {
+  @extend %content;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  max-height: calc(100vh - 40px);
+  margin-top: 20px;
+  margin-bottom: 20px;
+  overflow: hidden;
+
+  @include media('<phone') {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    padding: 2rem 0;
+  }
+
+}
+
+.intro__wrapper {
+  margin: auto;
+  width: 70vw;
+
+  @include media('<phone') {
+    width: 95%;
+  }
+}
+
 .intro__header {
   position: relative;
   z-index: 1;
   color: $color-pine-tree;
   text-align: center;
-
-  @include media('<=phone') {
-    // Add mobile-specific styles if needed
-  }
 }
 
 .intro__header__title {
@@ -16,108 +52,68 @@
   color: white;
 
   @include media('<=phone') {
-    font-size: 3rem;
+    font-size: 6rem;
   }
 }
 
 .intro__header__title__text {
-  display: flex;
-  justify-content: center;
+  display: block;
   overflow: hidden;
-  margin-top: 30vh;
-  margin-bottom: 15vh;
+  text-align: center;
+  margin-top: 7vh;
 
   span {
+    display: inline-block;
     transform: translateY(100%);
     transition: transform 1s ease;
   }
 
   &:not(:first-child) {
-    margin-top: -6rem;
+    margin-top: 0;
+    margin-bottom: 5vh; // ↓↓↓ SPACING FIX HERE ↓↓↓
   }
 
   @include media('<=phone') {
+    margin-top: 5vh;
 
-    margin-top: 3vh;
     &:not(:first-child) {
-      margin-top: -1rem;
+      margin-bottom: 3vh; // tighter on mobile too
     }
   }
 }
 
-.intro--active {
-  .intro__header__title__text span:nth-child(1) {
-    transform: translateY(0);
-    transition: transform 2.5s 1s $ease-out-expo;
-  }
+.intro__header__title__sub {
+  span {
+    font-weight: 100;
+    font-size: 11rem;
 
-  .intro__header__title__text span:nth-child(2) {
-    transform: translateY(0);
-    transition: transform 2.5s 1.4s $ease-out-expo;
-  }
-
-  .intro__enter {
-    transform: translate(-50%, -50%);
-    opacity: 1;
-  }
-
-  .intro__description {
-    transform: translateY(0);
-    opacity: 1;
+    @include media('<=phone') {
+      font-size: 2.2rem;
+    }
   }
 }
 
-.intro__header__title--reverse {
-  transform: translateY(-130%);
-  transition: transform 0.4s ease;
+// Wipe animation wrapper
+.intro__description__wrapper {
+  overflow: hidden;
+  width: 100%;
 }
-
-.intro__enter {
-  position: relative;
-  top: 50%;
-  left: 50%;
-  margin-top: 30rem;
-  transform: translate(-50%, 100%);
-  opacity: 0;
-  font-size: 5rem;
-  color: white;
-  text-transform: uppercase;
-  font-family: $font-neue-montreal;
-  transition: transform 3.5s 2s $ease-out-expo, opacity 3.5s 2s $ease-out-expo;
-  cursor: pointer;
-  z-index: 3;
-
-  @include media('<=phone') {
-    font-size: 1.5rem;
-    margin-top: 1rem;
-  }
-
-}
-
-.intro__enter--reverse {
-  transform: translate(-50%, 100%);
-  opacity: 0;
-  transition: transform 0.5s ease, opacity 0.5s ease;
-}
-
 
 .intro__description {
   display: block;
   text-align: center;
-  margin: 3rem 15vw;
-  overflow: hidden;
+  margin: 1.5rem 15vw 3rem 15vw;
   font-family: $font-neue-montreal;
   font-size: 3rem;
   text-transform: uppercase;
   color: white;
   transform: translateY(100%);
   opacity: 0;
-  transition: transform 2s 1.6s $ease-out-expo;
+  transition: transform 2s 1.6s $ease-out-expo, opacity 2s 1.6s ease;
 
   @include media('<=phone') {
-    margin: 20rem 15vw;
+    margin: 2rem 10vw 2rem 10vw;
     font-size: 2rem;
-    overflow: hidden;
   }
 }
 
@@ -126,4 +122,101 @@
   overflow: hidden;
   opacity: 0;
   transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.intro__enter {
+  position: relative;
+  top: auto;
+  left: auto;
+  display: block;
+  margin: 6rem auto 0 auto;
+  transform: translateY(100%);
+  opacity: 0;
+  font-size: 3rem;
+  text-transform: uppercase;
+  font-family: $font-neue-montreal;
+  text-align: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 3.5s 2s $ease-out-expo, opacity 3.5s 2s $ease-out-expo;
+
+  a {
+    display: inline-block;
+    color: white;
+    text-decoration: none;
+    will-change: transform;
+    animation: none;
+    transition: color 0.3s ease;
+
+    &:hover {
+      animation: hoverGrow 4s ease-out forwards;
+      color: red;
+    }
+
+    &:active {
+      animation: clickSquish 0.2s ease forwards;
+    }
+  }
+
+  @include media('<=phone') {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  }
+}
+
+// 👆 Hover Grow (glide in)
+@keyframes hoverGrow {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+// 👇 Click Squish (tap feel)
+@keyframes clickSquish {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+
+
+
+.intro__enter--reverse {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.intro--active {
+  .intro__header__title__text:nth-of-type(1) span {
+    transform: translateY(0);
+    transition: transform 2.5s 1s $ease-out-expo;
+  }
+
+  .intro__header__title__text:nth-of-type(2) span {
+    transform: translateY(0);
+    transition: transform 2.5s 1.4s $ease-out-expo;
+  }
+
+  .intro__description {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .intro__enter {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

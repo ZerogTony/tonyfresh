@@ -1,3 +1,5 @@
+//— case.pug —————————————————————————————————————————————————
+
 mixin template({ id, title, company, role, technologies, link, label, gallery, description, videos })
   article.case(id=id)
     header.case__header
@@ -14,11 +16,9 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
       p.case__information__detail
         | #[strong.case__information__detail__title Company]
         | #{company}
-
       p.case__information__detail
         | #[strong.case__information__detail__title Role]
         | #{role}
-
       p.case__information__detail
         | #[strong.case__information__detail__title Practice]
         | #{technologies}
@@ -27,11 +27,10 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
       p.case__description__text= description
 
       .case__gallery
-
-        // IMAGES
+        //── IMAGES ───────────────────────────────────────
         each content in gallery
           .case__gallery__media.image-container
-            .case__gallery__media__box(style=`max-width: ${content.width / 10}rem;`)
+            .case__gallery__media__box(style=`max-width: ${content.width/10}rem;`)
               span.case__gallery__media__loader
                 span
                 span
@@ -39,20 +38,33 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
               span.case__gallery__media__placeholder(
                 data-src=`/case/${id}/${content.image}.jpg`
                 data-src-webp=`/case/${id}/${content.image}.webp`
-                style=`padding-top: ${content.height / content.width * 100}%;`
+                style=`padding-top: ${content.height/content.width*100}%;`
               )
 
-        // VIDEOS
+        //── VIDEOS ───────────────────────────────────────
         if videos
-          each videoFile in videos
+          - var gridVideos = [], normalVideos = []
+          each vid in videos
+            if vid.layout === 'grid'
+              - gridVideos.push(vid)
+            else
+              - normalVideos.push(vid)
+
+          if gridVideos.length
+            .case__gallery__video-grid
+              each vid in gridVideos
+                .case__gallery__media.video-container.grid-item
+                  video.case__media__video(autoplay loop muted playsinline)
+                    source(src=`/case/${id}/${vid.file}`, type='video/mp4')
+                    | Your browser does not support the video tag.
+
+          each vid in normalVideos
             .case__gallery__media.video-container
-              .case__gallery__media__box.video-box
-                video.case__media__video(autoplay loop muted playsinline)
-                  source(src=`/case/${id}/${videoFile}`, type='video/mp4')
-                  | Your browser does not support the video tag.
+              video.case__media__video(autoplay loop muted playsinline)
+                source(src=`/case/${id}/${vid.file}`, type='video/mp4')
+                | Your browser does not support the video tag.
 
     a.case__back(href="/home") Back to Work
-
 
 
 
@@ -69,13 +81,15 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
       In addition to the branding work, I also led for a graffiti mural activation in Shoreditch, London. The mural was to promote the launch and a Megan Thee Stallion collaboration and a QR code was incorporated into the art, to be scanned for a promo deal.
       The artwork was created from existing assets given by the Popeyes marketing team. A QR code was incorporated into the mural, allowing passers-by to scan it for a free promo deal.
     `,
+    videos: [
+    { file: 'popeyesvideo.webm' },
+    { file: 'whoa.webm' },
+  ],
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
       { image: '6', type: 'screenshot', height: '810', width: '810' },
-      { image: '8', type: 'screenshot', height: '810', width: '810' },
       { image: '7', type: 'screenshot', height: '1080', width: '810' },
       { image: '2', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
       { image: '5', type: 'screenshot', height: '1080', width: '1080' },
       
     ],
@@ -85,25 +99,29 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
 
 
   +template({
-    id: 'sazy',
-    title: 'Sazy',
-    company: 'Sazy',
-    role: 'Lead Graphic Designer',
-    technologies: 'Graphic Design',
-    description: 'Led visual design at this growing startup, refining and strengthening the company’s brand identity through email campaigns and custom label design. Directed product photoshoots and managed post-production, while maintaining brand consistency through detailed guidelines. Created designs for our website and marketing materials, ensuring a cohesive look and feel across all channels',
-    videos: [
-    'Pescara.webm',
-    'Storychairs.webm'
+  id: 'sazy',
+  title: 'Sazy',
+  company: 'Sazy',
+  role: 'Lead Graphic Designer',
+  technologies: 'Graphic Design',
+  description: 'Led visual design at this growing startup, refining and strengthening the company’s brand identity through email campaigns and custom label design. Directed product photoshoots and managed post-production, while maintaining brand consistency through detailed guidelines. Created designs for our website and marketing materials, ensuring a cohesive look and feel across all channels',
+  videos: [
+    { file: 'Pescara.webm' },
+    { file: 'Dining_chairs.webm', layout: 'grid' },
+    { file: 'dining_chairs_2.webm', layout: 'grid' },
+    { file: 'dining_chairs_3.webm', layout: 'grid' },
+    { file: 'zeynep.webm', layout: 'grid' },
+    { file: 'sofa.webm', layout: 'grid' },
+    { file: 'dinner.webm', layout: 'grid' },
   ],
-    gallery: [
-      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
-      ]
-   
-         
-  })
+  gallery: [
+    { image: '2', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '4', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '1', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '3', type: 'screenshot', height: 1080, width: 1920 }
+    
+  ]
+})
 
   +template({
     id: 'spotify',
@@ -189,11 +207,15 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     role: 'Designer',
     technologies: 'Web Design, Graphic Design, Motion Design',
     description: 'As a Senior Designer at The Fitting Room, I worked with Idris Elba on multiple design projects including web design, social content and management and event design for his personal brand, his wine company Port Noire, and film company Green Door Pictures and film premiere parties such as "The Harder They Fall.',
-
+    videos: [
+    { file: 'portenoire.webm' },
+  ],
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
       { image: '2', type: 'screenshot', height: '1080', width: '1920' },
       { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '5', type: 'screenshot', height: '1080', width: '1920' },
   
     ]
   })
@@ -277,9 +299,8 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     gallery: [
       { image: '6', type: 'screenshot', height: '1080', width: '1920' },
       { image: '7', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '1', type: 'screenshot', height: '1080', width: '1620' },
-      { image: '2', type: 'screenshot', height: '1350', width: '1080' },
-      { image: '3', type: 'screenshot', height: '905', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
       { image: '4', type: 'screenshot', height: '1080', width: '1920' },
       { image: '5', type: 'screenshot', height: '1080', width: '800' },
     ],

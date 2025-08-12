@@ -1,24 +1,18 @@
 import NormalizeWheel from 'normalize-wheel'
 import Prefix from 'prefix'
-
 import each from 'lodash/each'
-
 import Component from 'classes/Component'
-
 import { getOffset } from 'utils/dom'
 import { lerp } from 'utils/math'
 
 export default class extends Component {
-  constructor ({ element, elements }) {
-    super({
-      element,
-      elements
-    })
+  constructor({ element, elements }) {
+    super({ element, elements })
 
     this.transformPrefix = Prefix('transform')
 
     this.scroll = {
-      ease: 0.9,
+      ease: 0.04,
       position: 0,
       current: 0,
       target: 0,
@@ -26,9 +20,16 @@ export default class extends Component {
       clamp: 0
     }
 
+    this.isDown = false
+    this.scrollTimeout = null
+    this.raf = null
+
+    this.setupItems()
+  }
+
+  setupItems() {
     each(this.elements.items, element => {
       const offset = getOffset(element)
-
       element.extra = 0
       element.height = offset.height
       element.offset = offset.top
@@ -36,99 +37,124 @@ export default class extends Component {
     })
 
     this.length = this.elements.items.length
-
-    this.height = this.elements.items[0].height
+    this.height = this.elements.items[0].getBoundingClientRect().height
     this.heightTotal = this.elements.list.getBoundingClientRect().height
   }
 
-  enable () {
+  enable() {
+    if (this.isEnabled) return
     this.isEnabled = true
-
-    this.update()
+    this.updateLoop()
   }
 
-  disable () {
+  disable() {
     this.isEnabled = false
+    if (this.raf) cancelAnimationFrame(this.raf)
   }
 
-  onTouchDown (event) {
+  onTouchDown(event) {
     if (!this.isEnabled) return
-
     this.isDown = true
-
     this.scroll.position = this.scroll.current
     this.start = event.touches ? event.touches[0].clientY : event.clientY
+    clearTimeout(this.scrollTimeout)
   }
 
-  onTouchMove (event) {
+  onTouchMove(event) {
     if (!this.isDown || !this.isEnabled) return
 
     const y = event.touches ? event.touches[0].clientY : event.clientY
     const distance = (this.start - y) * 3
-
     this.scroll.target = this.scroll.position + distance
   }
 
-  onTouchUp (event) {
+  onTouchUp() {
     if (!this.isEnabled) return
-
     this.isDown = false
+    this.snapAfterDelay()
   }
 
-  onWheel (event) {
+  onWheel(event) {
     if (!this.isEnabled) return
 
     const normalized = NormalizeWheel(event)
-    const speed = normalized.pixelY *0.9
-
+    const speed = normalized.pixelY * 2.2
     this.scroll.target += speed
+
+    this.snapAfterDelay()
   }
 
-  transform (element, y) {
+  snapAfterDelay() {
+    clearTimeout(this.scrollTimeout)
+    this.scrollTimeout = setTimeout(() => {
+      this.snapToNearest()
+    }, 150)
+  }
+
+  snapToNearest() {
+    const viewportCenter = window.innerHeight / 2
+
+    let closestItem = null
+    let minDistance = Infinity
+
+    this.elements.items.forEach(item => {
+      const itemTop = item.offsetTop + item.extra
+      const itemCenter = itemTop + item.offsetHeight / 2
+      const distance = Math.abs(this.scroll.current + viewportCenter - itemCenter)
+
+      if (distance < minDistance) {
+        minDistance = distance
+        closestItem = item
+      }
+    })
+
+    if (closestItem) {
+      const itemTop = closestItem.offsetTop + closestItem.offsetHeight / 2
+      this.scroll.target = itemTop - viewportCenter
+    }
+  }
+
+  transform(element, y) {
     element.style[this.transformPrefix] = `translate3d(0, ${Math.floor(y)}px, 0)`
   }
 
-  update () {
+  update() {
     if (!this.isEnabled) return
 
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease)
 
-    if (!this.isDown && Math.abs(this.scroll.current - this.scroll.target) < 1) {
-      this.scroll.target = Math.round(this.scroll.target / this.height) * this.height
+    // 🌀 Wrap scroll for infinite loop
+    if (this.scroll.current < 0) {
+      this.scroll.current += this.heightTotal
+      this.scroll.target += this.heightTotal
+    } else if (this.scroll.current > this.heightTotal) {
+      this.scroll.current -= this.heightTotal
+      this.scroll.target -= this.heightTotal
     }
 
     const scrollClamp = Math.round(this.scroll.current % this.heightTotal)
+    this.direction = this.scroll.current < this.scroll.last ? 'down' : 'up'
 
-    if (this.scroll.current < this.scroll.last) {
-      this.direction = 'down'
-    } else {
-      this.direction = 'up'
-    }
-
-    each(this.elements.items, (element, index) => {
+    each(this.elements.items, (element) => {
       element.position = -this.scroll.current - element.extra
-
       const offset = element.position + element.offset + element.height
 
       element.isBefore = offset < 0
       element.isAfter = offset > this.heightTotal
 
       if (this.direction === 'up' && element.isBefore) {
-        element.extra = element.extra - this.heightTotal
-
+        element.extra -= this.heightTotal
         element.isBefore = false
         element.isAfter = false
       }
 
       if (this.direction === 'down' && element.isAfter) {
-        element.extra = element.extra + this.heightTotal
-
+        element.extra += this.heightTotal
         element.isBefore = false
         element.isAfter = false
       }
 
       element.clamp = element.extra % scrollClamp
-
       this.transform(element, element.position)
     })
 
@@ -136,23 +162,16 @@ export default class extends Component {
     this.scroll.clamp = scrollClamp
   }
 
-  onResize () {
-    each(this.elements.items, element => {
-      this.transform(element, 0)
+  updateLoop() {
+    this.update()
+    this.raf = requestAnimationFrame(this.updateLoop.bind(this))
+  }
 
-      const offset = getOffset(element)
-
-      element.extra = 0
-      element.height = offset.height
-      element.offset = offset.top
-      element.position = 0
-    })
-
-    this.height = this.elements.items[0].getBoundingClientRect().height
-    this.heightTotal = this.elements.list.getBoundingClientRect().height
+  onResize() {
+    this.setupItems()
 
     this.scroll = {
-      ease: 0.05,
+      ...this.scroll,
       position: 0,
       current: 0,
       target: 0,

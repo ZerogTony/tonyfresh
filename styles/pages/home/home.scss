@@ -1,44 +1,46 @@
-
-
 .home {
   @extend %cover;
   @extend %page;
   color: $color-pine-tree;
-
-  
   transition: opacity 0s ease, visibility 0.4s ease;
 
   &--active {
     @extend %page--active;
   }
-
-  // &:after {
-  //   background: #f0f;
-  //   content: '';
-  //   height: 100%;
-  //   left: 50%;
-  //   position: absolute;
-  //   transform: translateX(-50%);
-  //   width: 1.5rem;
-  // }
 }
 
-.fullscreen-div {
+.home__overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color:  rgb(17, 17, 17);; // or any color you prefer
-  z-index: 100; // ensure it's above other content
-  transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1);
-  transform: translateY(0); // start fully visible
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.home__overlay__row {
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  background-color: rgb(17, 17, 17);
+  transform: scaleY(0);
+  transform-origin: center;
+
+  &--top {
+    top: 0;
+    transform-origin: top center;
+  }
+
+  &--bottom {
+    bottom: 0;
+    transform-origin: bottom center;
+  }
 }
 
 
 .home__background {
   @extend %cover;
-
   color: rgb(0, 0, 0);
   display: none;
   pointer-events: none;
@@ -76,62 +78,54 @@
 .home__list {
   display: flex;
   flex-direction: column;
-  gap: 40rem; // 👈 apply spacing *between* items only
-  
-
+  gap: 40rem;
 }
 
 .home__item {
   font: 7rem/9 $font-neue-montreal;
   white-space: nowrap;
-  height: 100vh; // makes each item fill the full viewport height
+  height: 100vh;
   display: flex;
-  align-items: center; // vertically centers the .home__link
-  margin-bottom: 0; // not needed anymore since spacing is handled by height
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
 
   @include media('<=phone') {
     font: 2rem/9 $font-neue-montreal;
-    height: auto; // allow natural flow on small screens
+    height: auto;
     padding: 10rem 0;
   }
 }
-
-
-
-
 
 .home__link {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10vw; // 👈 this gives both sides margin from edge
+  padding: 0 10vw;
   gap: 5rem;
+
   @include media('<=phone') {
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    padding: 0 2rem; // tighter on small screens
-  
+    padding: 0 2rem;
+  }
 }
-
-
-
-
 
 .home__link__wrapper {
   display: flex;
   flex-direction: column;
-  margin-bottom: 3rem; // was pushing it too far down
+  margin-bottom: 3rem;
   min-width: 72.3rem;
-}
-
 
   .home__link__number {
     display: block;
-    font-size:5rem;
+    font-size: 5rem;
     font-weight: 400;
     line-height: 1;
     opacity: 0.5;
-    margin-top: 0.5rem; // or even 0 if you want them super snug
+    margin-top: 0.5rem;
   }
 
   .home__link__title {
@@ -150,12 +144,11 @@
     line-height: 1.4;
     max-width: 50rem;
     margin-bottom: 1rem;
-
   }
 
   @include media('<=phone') {
-    min-width: 28.3rem;
-    margin-top: 20rem;
+    min-width: unset;
+    margin: 0;
 
     .home__link__title {
       font-size: 2rem;
@@ -167,19 +160,33 @@
   }
 }
 
+.home__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10vw;
+  gap: 5rem;
 
+  @include media('<=phone') {
+    flex-direction: column;
+    text-align: center;
+    padding: 0 2rem;
+    align-items: center;       // ✅ NEW: horizontally centre children
+    justify-content: center;   // ✅ NEW: vertically centre in case needed
+  }
+}
 
 .home__link__media {
   background: $color-pine-tree;
-  flex-shrink: 0; // 🚫 don't let it get squished
+  flex-shrink: 0;
   height: 50.3rem;
   width: 68.3rem;
   overflow: hidden;
   object-fit: cover;
-  opacity: 0; // or keep your transition if needed
-  position: static; // this is the key change
+  opacity: 0;
+  position: static;
+  transform-origin: center center; // ✅ ensure it's growing from the centre
 
-  // Direction-based alignment
   &[data-direction="left"] {
     order: 2;
     margin-left: 4rem;
@@ -195,7 +202,15 @@
     height: 10.3rem;
     margin: 0;
     order: unset;
+
+      &[data-direction="left"] {
+    order: 2;
+    margin-left: 0rem;
+  }
+
+  &[data-direction="right"] {
+    order: 1;
+    margin-right: 0rem;
+  }
   }
 }
-
-

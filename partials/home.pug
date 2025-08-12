@@ -14,6 +14,9 @@ mixin template(id, title, direction, number, description)
 
 
 section.home
+  .home__overlay
+    .home__overlay__row.home__overlay__row--top
+    .home__overlay__row.home__overlay__row--bottom
   .home__background
     .home__background__top
     .home__background__bottom
@@ -32,6 +35,3 @@ section.home
       +template('ocb', 'Old Compton', 'right', '09', 'Visual identity for London restaurant')
       +template('jack-daniels', 'Jack Daniels', 'left', '10', 'Experimental visuals for heritage brand')
       +template('inbound', 'Ripple+', 'right', '11', 'Event branding + digital materials')
-      
-     
-  div.fullscreen-div

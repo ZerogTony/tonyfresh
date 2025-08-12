@@ -54,8 +54,8 @@
     0.5s = delay before the animation starts
   */
   transition: 
-    transform 1.5s 0.5s $ease-out-expo,
-    opacity   1.5s 0.8s $ease-out-expo;
+    transform 1.5s 1.5s $ease-out-expo,
+    opacity   1.5s 1.5s $ease-out-expo;
 
   // For mobile, override if needed
   .mobile & {

@@ -1,26 +1,19 @@
 section.intro
-
+  .intro__overlay
+    .intro__overlay__row.intro__overlay__row--top
+    .intro__overlay__row.intro__overlay__row--bottom
   .intro__content
     .intro__wrapper
-
-   
-
       header.intro__header
         h1.intro__header__title
-          span.intro__header__title__text
-            | #[span Tim Andrews/]
-            | #[span Designer]
+          .intro__header__title__text
+            span Tim Andrews
+          .intro__header__title__text.intro__header__title__sub
+            span Digital Designer
 
-
-
-
-      
-      //.image-wrapper
-         .intro__image
-          img(src="/intro/intro.webp" alt="Intro Image")
-
-      .intro__description
-        p I am a multidisciplinary designer with a focus on digital and print media.
+      .intro__description__wrapper
+        .intro__description
+          p I am a multidisciplinary designer with a focus on digital and print media.
 
       .intro__enter
-       a.navigation__link(href="/home") Selected Works
+        a.navigation__link(href="/home") Selected Works
