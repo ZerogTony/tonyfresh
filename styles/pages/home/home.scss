@@ -132,17 +132,40 @@
     line-height: 1;
     opacity: 0.5;
     margin-top: 0.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    will-change: transform, opacity;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    --underline-scale: 1;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -0.8rem;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      opacity: 0.3;
+      transform: scaleX(var(--underline-scale));
+      transform-origin: right center;
+      transition: transform 0.15s ease;
+    }
   }
 
   .home__link__title {
     display: block;
     font-size: 9rem;
     font-weight: 600;
-    line-height: 1;
-    margin-bottom: 1rem;
+    line-height: 1.1;
+    margin-bottom: 2rem;
     letter-spacing: 0;
-    transition: letter-spacing 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: letter-spacing 0.6s cubic-bezier(0.25, 0.1, 0.25, 1.0);
     cursor: pointer;
+    will-change: transform, opacity;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
   }
 
   .home__link__description {
@@ -153,6 +176,9 @@
     line-height: 1.4;
     max-width: 50rem;
     margin-bottom: 1rem;
+    will-change: transform, opacity;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
   }
 
   @include media('<=phone') {
