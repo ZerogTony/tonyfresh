@@ -20,6 +20,14 @@ export default class {
       ease: 0.15
     }
 
+    this.hoverScale = {
+      current: 1,
+      target: 1,
+      ease: 0.15
+    }
+
+    this.isTransitioning = false
+
     this.transition = 0
 
     this.geometry = geometry
@@ -47,6 +55,7 @@ export default class {
     this.onResize()
 
     window.addEventListener('mediaOpened', this.onOtherMediaOpened);
+    window.addEventListener('homeTransitionStart', this.onHomeTransitionStart);
 
   }
 
@@ -69,6 +78,13 @@ console.log("Current media ID:", this.id);
 
 destroy() {
   window.removeEventListener('mediaOpened', this.onOtherMediaOpened);
+  window.removeEventListener('homeTransitionStart', this.onHomeTransitionStart);
+}
+
+onHomeTransitionStart() {
+  this.isTransitioning = true;
+  // Return to original size (1.0) for smooth transition
+  this.hoverScale.target = 1.0;
 }
 
 
@@ -150,8 +166,18 @@ createMesh() {
     this.height = lerp(this.boundsHome.height, this.boundsCase.height, this.transition)
     this.width = lerp(this.boundsHome.width, this.boundsCase.width, this.transition)
 
-    this.plane.scale.x = this.viewport.width * this.width / this.screen.width
-    this.plane.scale.y = this.viewport.height * this.height / this.screen.height
+    this.plane.scale.x = (this.viewport.width * this.width / this.screen.width) * this.hoverScale.current
+    this.plane.scale.y = (this.viewport.height * this.height / this.screen.height) * this.hoverScale.current
+  }
+
+  updateHoverScale () {
+    if (this.hoverScale.current === this.hoverScale.target) return
+
+    this.hoverScale.current = lerp(this.hoverScale.current, this.hoverScale.target, this.hoverScale.ease, true)
+
+    if (Math.abs(this.hoverScale.current - this.hoverScale.target) < 0.001) {
+      this.hoverScale.current = this.hoverScale.target
+    }
   }
 
   updateY (y) {
@@ -194,6 +220,7 @@ createMesh() {
   update (y) {
     this.scroll = y
 
+    this.updateHoverScale()
     this.updateScale()
     this.updateX()
     this.updateY(y)
@@ -221,10 +248,16 @@ createMesh() {
 
   onMouseOver () {
     this.isHovering = true
+    if (!this.isTransitioning) {
+      this.hoverScale.target = 0.92
+    }
   }
 
   onMouseLeave () {
     this.isHovering = false
+    if (!this.isTransitioning) {
+      this.hoverScale.target = 1
+    }
   }
 
   /**
@@ -248,10 +281,13 @@ createMesh() {
     this.alpha.target = 0;
     console.log("Opening media with ID:", this.id);
     this.isOpened = true;
+    this.isTransitioning = true;
+    
+    // Lock hover scale to current state
+    this.hoverScale.target = this.hoverScale.current;
+    
     window.dispatchEvent(new CustomEvent('mediaOpened', { detail: this.id }));
     this.animation.play();
-    
-
 
 }
 
@@ -267,6 +303,7 @@ createMesh() {
     }
 
     this.isOpened = false
+    this.isTransitioning = false
   }
  
     
