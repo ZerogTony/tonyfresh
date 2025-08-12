@@ -36,7 +36,7 @@ export default class extends Page {
     this.elements.wrapper = Array.from(this.elements.cases).find(item => item.id === id)
     this.elements.wrapper.classList.add(this.classes.caseActive)
 
-    this.scroll.limit = this.elements.wrapper.limit - window.innerHeight
+    this.scroll.limit = this.elements.wrapper.clientHeight - window.innerHeight
 
     if (Detection.isMobile()) {
       this.elements.image = this.elements.wrapper.querySelector('.case__media__image')

@@ -118,13 +118,28 @@ class App {
 
     this.isFetching = true
 
+    const previousUrl = this.url
     this.url = url
 
     if (this.canvas) {
       this.canvas.onChange(this.url)
     }
 
-    await this.page.hide()
+    // Special handling for intro to home transition
+    if (previousUrl === '/' && url === '/home') {
+      // Start cover transition from intro
+      const coverTransition = this.page.startCoverTransition && this.page.startCoverTransition()
+      
+      if (coverTransition) {
+        await new Promise(resolve => {
+          coverTransition.eventCallback('onComplete', resolve)
+        })
+      }
+      
+      await this.page.hide()
+    } else {
+      await this.page.hide()
+    }
 
     if (push) {
       window.history.pushState({}, document.title, url)

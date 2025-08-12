@@ -2,9 +2,15 @@ import FontFaceObserver from 'fontfaceobserver'
 
 import each from 'lodash/each'
 
+
+import Scrolling from 'components/Scrolling'
+
 import Detection from 'classes/Detection'
 
 import Page from 'components/Page'
+
+
+
 
 import { BREAKPOINT_PHONE } from 'utils/breakpoints'
 import { getOffset } from 'utils/dom'

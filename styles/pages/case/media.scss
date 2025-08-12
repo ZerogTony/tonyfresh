@@ -1,13 +1,18 @@
+// Keyframes for loading animation
 @keyframes loading {
   from {
     opacity: 1;
   }
 }
 
+// Main gallery container
 .case__gallery {
   margin-top: 10rem;
   opacity: 0;
-  transition: opacity 0.4s 1s ease;
+  transition-property: opacity;
+  transition-duration: 0.4s;
+  transition-delay: 1s;
+  transition-timing-function: ease;
 
   .mobile & {
     transition-delay: 0s;
@@ -18,71 +23,113 @@
   }
 }
 
-// Base styling for each gallery "media" item
-.case__gallery__media {
-  &:not(:first-child) {
-    margin-top: 10rem;
-  }
-
-  @include media('<=phone') {
-    &:not(:first-child) {
-      margin-top: 2.5rem;
-    }
-  }
+// ────────────────────────────────────────
+// 1) Grid for images only
+// ────────────────────────────────────────
+.case__gallery__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  row-gap: 1rem;
+  column-gap: 1rem;
+  margin-top: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-left: 0;
 }
 
-// The general "box" that wraps each video/image
+// ────────────────────────────────────────
+// 2) Grid for small (layout: grid) videos
+// ────────────────────────────────────────
+.case__gallery__video-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  row-gap: 2rem;
+  column-gap: 2rem;
+  margin-top: 0;
+  margin-right: 0;
+  margin-bottom: 2rem;
+  margin-left: 0;
+}
+
+// ────────────────────────────────────────
+// 3) Flex‑column for full‑width videos
+// ────────────────────────────────────────
+.case__gallery__videos {
+  display: flex;
+  flex-direction: column;
+  row-gap: 2rem;  // vertical spacing between each full‑width video
+  margin-top: 2rem;
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+}
+
+// ────────────────────────────────────────────────
+// Remove any global margin‑top on each .media item
+// (we’ll rely on the wrapper’s gap settings instead)
+// ────────────────────────────────────────────────
+.case__gallery__media {
+  margin-top: 0 !important;
+}
+
+// Box wrapper for both images and videos
 .case__gallery__media__box {
-  width: 65%;
+  width: 90%;
   max-width: 192rem;
-  margin: 0 auto;
+  margin-top: 0;
+  margin-right: auto;
+  margin-bottom: 0;
+  margin-left: auto;
   position: relative;
   background: transparent;
-  // NO flex here, so images keep their original layout
 }
 
-// ─────────────────────────────────────────────
-// NEW: We apply a fade-in with a delay to the .video-box
-// ─────────────────────────────────────────────
+// Fade‑in wrapper for videos
 .video-box {
   display: flex;
   justify-content: center;
   align-items: center;
-
-  /* Start hidden */
   opacity: 0;
-  /* 
-    1s fade, waits 1s before starting:
-    - First number = fade duration
-    - Second number = delay before fade
-  */
-  transition: opacity 1s ease 1s;
+  transition-property: opacity;
+  transition-duration: 1s;
+  transition-delay: 1s;
+  transition-timing-function: ease;
 
-  // When the case becomes active, fade in
   .case--active & {
     opacity: 1;
   }
 }
 
-// The loading spinner (for images, presumably)
+// Loading spinner
 .case__gallery__media__loader {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  transition: opacity 0.4s ease;
+  transition-property: opacity;
+  transition-duration: 0.4s;
+  transition-timing-function: ease;
   white-space: nowrap;
   z-index: 1;
 
   span {
-    animation: loading 0.4s ease infinite alternate;
+    animation-name: loading;
+    animation-duration: 0.4s;
+    animation-timing-function: ease;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
     background: $color-pine-tree;
     border-radius: 50%;
     display: inline-block;
     height: 1rem;
+    margin-top: 0;
     margin-right: 1rem;
+    margin-bottom: 0;
+    margin-left: 0;
     opacity: 0;
-    transition: background-color 0.5s ease;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;
     width: 1rem;
 
     &:nth-child(2) {
@@ -101,13 +148,16 @@
   @include media('<=phone') {
     span {
       height: 0.6rem;
+      margin-top: 0;
       margin-right: 1rem;
+      margin-bottom: 0;
+      margin-left: 0;
       width: 0.6rem;
     }
   }
 }
 
-// The placeholder for images (maintains aspect ratio)
+// Placeholder to maintain aspect ratio
 .case__gallery__media__placeholder {
   display: inline-block;
   position: relative;
@@ -115,7 +165,7 @@
   z-index: 2;
 }
 
-// The actual image, absolutely positioned over the placeholder
+// Actual image styling
 .case__gallery__media__image {
   position: absolute;
   top: 0;
@@ -124,16 +174,25 @@
   height: 100%;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1s ease;
+  border-radius: 1rem;
+  transition-property: opacity;
+  transition-duration: 1s;
+  transition-timing-function: ease;
 
   .case__gallery__media__placeholder--active & {
     opacity: 1;
   }
 }
 
-// Style for the <video> element
+// Video element styling
 video.case__media__video {
   display: block;
-  max-width: 100%; // or whatever width you prefer
-  height: auto;    // maintain aspect ratio
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+}
+
+// Grid‑item override (just in case)
+.grid-item {
+  max-width: 100%;
 }
