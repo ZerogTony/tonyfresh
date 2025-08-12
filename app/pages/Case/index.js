@@ -211,6 +211,9 @@ export default class extends Page {
     // Setup description text animations
     this.setupDescriptionAnimations()
 
+    // Setup back to work link handler
+    this.setupBackToWorkHandler()
+
     return super.show()
   }
 
@@ -233,6 +236,39 @@ export default class extends Page {
     descriptionTexts.forEach(descriptionText => {
       this.descriptionObserver.observe(descriptionText)
     })
+  }
+
+  setupBackToWorkHandler() {
+    const backLink = this.elements.wrapper.querySelector('.case__back')
+    
+    if (backLink) {
+      backLink.addEventListener('click', (e) => {
+        e.preventDefault()
+        this.fadeOutImagesAndNavigate()
+      })
+    }
+  }
+
+  fadeOutImagesAndNavigate() {
+    const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
+    
+    if (images.length > 0) {
+      GSAP.to(images, {
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power2.out',
+        stagger: 0.05,
+        onComplete: () => {
+          // Navigate to home after animation completes
+          window.history.pushState(null, null, '/home')
+          window.dispatchEvent(new PopStateEvent('popstate'))
+        }
+      })
+    } else {
+      // If no images found, navigate immediately
+      window.history.pushState(null, null, '/home')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
   }
 
   async hide () {
