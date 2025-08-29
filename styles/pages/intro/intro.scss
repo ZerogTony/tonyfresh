@@ -3,12 +3,20 @@
     @extend %page;
    z-index: 10000;
     overflow: hidden;
-    transition: opacity 0.4s 1s ease, visibility 0.5s ease;
+    // Remove transitions to prevent fade-in/out effects
+    transition: none !important;
     background-color: rgb(17, 17, 17);
   
     &--active {
         @extend %page--active;
         
+    }
+    
+    &--loading {
+      .intro__content {
+        opacity: 0;
+        pointer-events: none;
+      }
     }
 
      // &:after {
@@ -22,6 +30,36 @@
   // }
   }
 
+.intro__loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: $color-iron;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  opacity: 1;
+  
+  &--hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.intro__loader__percentage {
+  font-family: $font-neue-montreal;
+  font-size: 4rem;
+  color: $color-pine-tree;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  
+  @include media('<=phone') {
+    font-size: 2.5rem;
+  }
+}
 
 .intro__overlay {
   position: fixed;
@@ -30,7 +68,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 10002; /* Above loader */
 }
 
 .intro__overlay__row {
@@ -38,7 +76,7 @@
   width: 100%;
   height: 50%;
   background-color: rgb(17, 17, 17);
-  transform: scaleY(0);
+  transform: scaleY(0); /* Start hidden, reveal loader immediately */
   transform-origin: center;
 
   &--top {
@@ -54,35 +92,37 @@
 
 .intro__content {
   @extend %content;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
+  width: 100%;
+  height: 100vh;
   pointer-events: none;
   text-align: center;
-  max-height: calc(100vh - 40px); // Adjust 40px to your desired total vertical margin
-  margin-top: 20px;
-  margin-bottom: 20px;
   overflow: hidden;
 
-  @include media('<phone') {
-    padding: 1rem 0 1em;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    text-align: center;
-    max-height: calc(100vh - 40px); // Adjust 40px to your desired total vertical margin
-    overflow: hidden;
+  @include media('<=phone') {
+    padding: 1rem 1rem;
+  }
+
+  @include media('<=320px') {
+    padding: 0.5rem 0.5rem;
   }
 }
 
 .intro__wrapper {
-  margin: auto;
+  position: relative;
   width: 70vw;
+  height: 100%;
+  margin: 0 auto;
 
-  @include media('<phone') {
+  @include media('<=tablet') {
+    width: 85vw;
+  }
+
+  @include media('<=phone') {
     width: 95%;
+  }
+
+  @include media('<=320px') {
+    width: 98%;
   }
 }

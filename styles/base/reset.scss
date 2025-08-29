@@ -12,6 +12,7 @@ html {
   top: 0;
   -webkit-font-smoothing: antialiased;
   width: 100%;
+  transition: background-color 0.5s ease-in-out;
 
   @include media('<=phone') {
     font-size: calc(100vw / 375 * 10);
@@ -20,6 +21,7 @@ html {
 
 body {
   font-family:  $font-neue-montreal;
+  background: $color-pine-tree;
   height: 100%;
   left: 0;
   opacity: 1;
@@ -28,6 +30,7 @@ body {
   position: fixed;
   top: 0;
   width: 100%;
+  transition: background-color 0.5s ease-in-out;
 }
 
 *,

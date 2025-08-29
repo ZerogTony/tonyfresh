@@ -9,7 +9,8 @@ module.exports = merge(config, {
   devtool: 'inline-source-map',
 
   devServer: {
-    writeToDisk: true
+    writeToDisk: true,
+    historyApiFallback: true
   },
 
   output: {

@@ -55,6 +55,7 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
-    "lottie-web": "^5.12.2"
+    "lottie-web": "^5.12.2",
+    "split-type": "^0.3.4"
   }
 }

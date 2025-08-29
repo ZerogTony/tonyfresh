@@ -4,6 +4,7 @@ import 'utils/sw'
 
 import AutoBind from 'auto-bind'
 import Stats from 'stats.js'
+import GSAP from 'gsap'
 
 import each from 'lodash/each'
 
@@ -37,7 +38,7 @@ class App {
   
       this.createCanvas()
     
-
+    this.createGlobalOverlay()
     this.createNavigation()
     this.createCase()
     this.createHome()
@@ -73,6 +74,63 @@ class App {
   createCanvas () {
     this.canvas = new Canvas({
       url: this.url
+    })
+  }
+
+  createGlobalOverlay () {
+    this.globalOverlay = {
+      element: document.querySelector('.global-overlay'),
+      overlayTop: document.querySelector('.global-overlay__row--top'),
+      overlayBottom: document.querySelector('.global-overlay__row--bottom')
+    }
+    
+    console.log('Global overlay elements:', this.globalOverlay);
+    
+    if (!this.globalOverlay.element) {
+      console.error('Global overlay element not found!');
+    }
+  }
+
+  startGlobalCoverTransition () {
+    if (!this.globalOverlay.overlayTop || !this.globalOverlay.overlayBottom) {
+      console.error('Global overlay elements not found, skipping transition');
+      return Promise.resolve();
+    }
+
+    const tl = GSAP.timeline()
+
+    // Scale overlay rows to cover screen
+    tl.to([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], {
+      duration: 0.6,
+      ease: 'power2.inOut',
+      scaleY: 1
+    })
+    // Keep covered briefly
+    .to({}, { duration: 0.1 })
+
+    return new Promise(resolve => {
+      tl.eventCallback('onComplete', resolve)
+    })
+  }
+
+  finishGlobalCoverTransition () {
+    if (!this.globalOverlay.overlayTop || !this.globalOverlay.overlayBottom) {
+      console.error('Global overlay elements not found, skipping transition');
+      return Promise.resolve();
+    }
+
+    const tl = GSAP.timeline()
+    
+    // Keep covered briefly, then reveal
+    tl.to({}, { duration: 0.1 })
+    .to([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], {
+      duration: 0.8,
+      ease: 'power2.inOut',
+      scaleY: 0
+    })
+
+    return new Promise(resolve => {
+      tl.eventCallback('onComplete', resolve)
     })
   }
 
@@ -125,35 +183,61 @@ class App {
       this.canvas.onChange(this.url)
     }
 
-    // Special handling for intro to home transition
-    if (previousUrl === '/' && url === '/home') {
-      // Start cover transition from intro
-      const coverTransition = this.page.startCoverTransition && this.page.startCoverTransition()
+    // Special letterbox transition when going FROM intro TO homepage
+    if (previousUrl === '/' && this.url === '/home') {
+      // First, reverse all intro animations (intro handles this in its hide method)
+      await this.page.hide()
       
-      if (coverTransition) {
-        await new Promise(resolve => {
-          coverTransition.eventCallback('onComplete', resolve)
+      // Use global overlay for the letterbox transition (stays available between pages)
+      if (this.globalOverlay.overlayTop && this.globalOverlay.overlayBottom) {
+        // Set letterbox to cover screen (dark grey screen)
+        GSAP.set([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], { scaleY: 1 })
+        
+        // Update navigation and set new page behind the letterbox
+        if (push) {
+          window.history.pushState({}, document.title, url)
+        }
+        this.navigation.onChange(this.url)
+        this.page = this.pages[this.url]
+        
+        // Show homepage behind the letterbox
+        await this.page.show(this.url)
+        
+        // Then animate letterbox away to reveal homepage
+        GSAP.to([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], {
+          scaleY: 0,
+          duration: 0.8,
+          ease: 'power2.inOut',
+          delay: 0.2
         })
+      } else {
+        console.error('Global overlay elements not found for transition')
+        // Fallback without letterbox
+        if (push) {
+          window.history.pushState({}, document.title, url)
+        }
+        this.navigation.onChange(this.url)
+        this.page = this.pages[this.url]
+        await this.page.show(this.url)
       }
-      
-      await this.page.hide()
     } else {
+      // Normal transition for other pages
       await this.page.hide()
+
+      if (push) {
+        window.history.pushState({}, document.title, url)
+      }
+
+      this.navigation.onChange(this.url)
+
+      if (this.url.indexOf('/case') > -1) {
+        this.page = this.case
+      } else {
+        this.page = this.pages[this.url]
+      }
+
+      await this.page.show(this.url)
     }
-
-    if (push) {
-      window.history.pushState({}, document.title, url)
-    }
-
-    this.navigation.onChange(this.url)
-
-    if (this.url.indexOf('/case') > -1) {
-      this.page = this.case
-    } else {
-      this.page = this.pages[this.url]
-    }
-
-    await this.page.show(this.url)
 
     this.isFetching = false
   }

@@ -1,4 +1,6 @@
 section.intro
+  .intro__loader
+    .intro__loader__percentage 0%
   .intro__overlay
     .intro__overlay__row.intro__overlay__row--top
     .intro__overlay__row.intro__overlay__row--bottom
@@ -6,14 +8,19 @@ section.intro
     .intro__wrapper
       header.intro__header
         h1.intro__header__title
-          .intro__header__title__text
-            span Tim Andrews
-          .intro__header__title__text.intro__header__title__sub
-            span Digital Designer
+          .intro__header__title__center
+            .intro__header__title__overlap-container
+              .intro__header__title__text.intro__header__title__center-text
+                span DIGITAL
+              .intro__header__title__text.intro__header__title__overlay
+                span Tim Andrews
+              .intro__header__title__text.intro__header__title__overlay-right
+                span Portfolio 25
+            .intro__header__title__text.intro__header__title__center-text
+              span DESIGNER
 
-      .intro__description__wrapper
-        .intro__description
-          p I am a multidisciplinary designer with a focus on digital and print media.
+      .intro__image
+        .intro__image__inner
 
       .intro__enter
         a.navigation__link(href="/home") Selected Works

@@ -2,7 +2,7 @@
   @extend %cover;
   @extend %page;
   color: $color-pine-tree;
-  transition: opacity 0s ease, visibility 0.4s ease;
+  transition: opacity 0s ease, visibility 0s ease;
 
   &--active {
     @extend %page--active;

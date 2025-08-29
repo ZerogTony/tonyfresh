@@ -28,45 +28,26 @@
 
 .case__title {
   font: 23rem/0.8 $font-ampersand;
-  overflow: hidden;       // Ensure the text stays hidden when it’s offscreen
-  line-height: 1.4;       // Enough breathing room for big text
-  height: 2.5em;          // Enough height so text isn't clipped
+  line-height: 1.4;
   padding: 0 2rem;
-  transform: translateY(50%);
+  margin-bottom: 5rem;
   position: relative;
   text-align: center;
+  overflow: hidden;
 
   @include media('<=phone') {
     font-size: 5rem;
     line-height: 1.2;
-    height: 7rem;         
     white-space: inherit;
+    margin-bottom: 3rem;
   }
 }
 
 .case__title__text {
   display: block;
-  /* Start fully invisible and shifted down */
-  opacity: 0;
-  transform: translateY(100%);
-  /* 
-    1.5s = duration of the slide/fade
-    0.5s = delay before the animation starts
-  */
-  transition: 
-    transform 1.5s 1.5s $ease-out-expo,
-    opacity   1.5s 1.5s $ease-out-expo;
-
-  // For mobile, override if needed
-  .mobile & {
-    transition-delay: 0s; 
-  }
-
-  // Once case--active is applied, fade + slide up
-  .case--active & {
-    opacity: 1;
-    transform: translateY(-10%);
-  }
+  transform: translateY(200%);
+  will-change: transform;
+  overflow: hidden;
 }
 
 

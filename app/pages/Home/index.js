@@ -48,13 +48,15 @@ export default class extends Page {
     return super.show()
   }
 
-  finishCoverTransition() {
-    // Start with overlay covering screen
+  prepareForTransition() {
+    // Set overlay to cover screen immediately to prevent flash
     GSAP.set([this.elements.overlayTop, this.elements.overlayBottom], { scaleY: 1 });
+  }
 
-    const tl = GSAP.timeline();
-
+  finishCoverTransition() {
     // Keep covered briefly, then reveal
+    const tl = GSAP.timeline();
+    
     tl.to({}, { duration: 0.1 })
     .to([this.elements.overlayTop, this.elements.overlayBottom], {
       duration: 0.8,

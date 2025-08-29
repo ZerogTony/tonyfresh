@@ -172,6 +172,21 @@ export default class extends Page {
 
   
   
+  animateCaseTitle() {
+    const titleText = this.elements.wrapper.querySelector('.case__title__text')
+    
+    if (titleText) {
+      GSAP.fromTo(titleText, {
+        y: '200%'
+      }, {
+        y: '0%',
+        duration: 1.2,
+        ease: 'expo.out',
+        delay: 0.3
+      })
+    }
+  }
+
   /**
    * Animations.
    */
@@ -214,6 +229,9 @@ export default class extends Page {
     // Setup back to work link handler
     this.setupBackToWorkHandler()
 
+    // Animate case title with GSAP
+    this.animateCaseTitle()
+
     return super.show()
   }
 
@@ -250,25 +268,34 @@ export default class extends Page {
   }
 
   fadeOutImagesAndNavigate() {
-    const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
-    
-    if (images.length > 0) {
-      GSAP.to(images, {
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power2.out',
-        stagger: 0.05,
-        onComplete: () => {
-          // Navigate to home after animation completes
+    // First, quickly scroll to top
+    GSAP.to(this.scroll, {
+      target: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+      onComplete: () => {
+        // After scrolling, fade out images and navigate
+        const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
+        
+        if (images.length > 0) {
+          GSAP.to(images, {
+            opacity: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            stagger: 0.05,
+            onComplete: () => {
+              // Navigate to home after animation completes
+              window.history.pushState(null, null, '/home')
+              window.dispatchEvent(new PopStateEvent('popstate'))
+            }
+          })
+        } else {
+          // If no images found, navigate immediately
           window.history.pushState(null, null, '/home')
           window.dispatchEvent(new PopStateEvent('popstate'))
         }
-      })
-    } else {
-      // If no images found, navigate immediately
-      window.history.pushState(null, null, '/home')
-      window.dispatchEvent(new PopStateEvent('popstate'))
-    }
+      }
+    })
   }
 
   async hide () {
