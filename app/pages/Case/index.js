@@ -5,7 +5,7 @@ import GSAP from 'gsap';
 import { delay } from 'utils/math';
 
 export default class extends Page {
-  constructor() {
+  constructor(canvas) {
     super({
       classes: {
         active: 'cases--active',
@@ -21,6 +21,7 @@ export default class extends Page {
     });
 
     this.animatedDescriptions = new Set();
+    this.canvas = canvas;
     this.create();
   }
 
@@ -198,6 +199,9 @@ export default class extends Page {
     this.elements.wrapper = Array.from(this.elements.cases).find(item => item.id === id)
     this.elements.wrapper.classList.add(this.classes.caseActive)
 
+    // Change canvas background to match project color
+    // this.changeBackgroundColor(id)
+
     this.scroll.limit = this.elements.wrapper.clientHeight - window.innerHeight
 
     if (Detection.isMobile()) {
@@ -268,34 +272,96 @@ export default class extends Page {
   }
 
   fadeOutImagesAndNavigate() {
-    // First, quickly scroll to top
-    GSAP.to(this.scroll, {
-      target: 0,
-      duration: 0.6,
-      ease: 'power3.out',
-      onComplete: () => {
-        // After scrolling, fade out images and navigate
-        const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
-        
-        if (images.length > 0) {
-          GSAP.to(images, {
-            opacity: 0,
-            duration: 0.8,
-            ease: 'power2.out',
-            stagger: 0.05,
-            onComplete: () => {
-              // Navigate to home after animation completes
-              window.history.pushState(null, null, '/home')
-              window.dispatchEvent(new PopStateEvent('popstate'))
-            }
-          })
-        } else {
-          // If no images found, navigate immediately
+    console.log('=== BACK TO WORK CLICKED ===')
+    console.log('Current scroll position:', this.scroll.current)
+    console.log('Scroll target:', this.scroll.target)
+    console.log('Page content visible before scroll:', this.elements.wrapper.style.opacity)
+    
+    // Check if we need to scroll (only scroll if we're not already at the top)
+    if (this.scroll.current > 50) { // If we're more than 50px from top
+      console.log('🚀 Scrolling to top...')
+      // First, dramatically shoot to top
+      GSAP.to(this.scroll, {
+        current: 0,
+        target: 0,
+        duration: 0.5,
+        ease: 'power3.out',
+        onUpdate: () => {
+          console.log('Scrolling... current position:', this.scroll.current)
+        },
+        onComplete: () => {
+          console.log('✅ Scroll complete, proceeding with navigation')
+          this.proceedWithNavigation()
+        }
+      })
+    } else {
+      console.log('Already at top, proceeding immediately')
+      this.proceedWithNavigation()
+    }
+  }
+
+  proceedWithNavigation() {
+    console.log('🎬 Starting navigation transition...')
+    
+    // Fade out images and navigate
+    const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
+    console.log('Images found for fade out:', images.length)
+    
+    if (images.length > 0) {
+      GSAP.to(images, {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        stagger: 0.03,
+        onStart: () => {
+          console.log('🖼️ Starting image fade out...')
+        },
+        onComplete: () => {
+          console.log('✅ Image fade complete, navigating to home')
+          // Navigate to home after animation completes
           window.history.pushState(null, null, '/home')
           window.dispatchEvent(new PopStateEvent('popstate'))
         }
-      }
-    })
+      })
+    } else {
+      console.log('⚠️ No images found, navigating immediately')
+      // If no images found, navigate immediately
+      window.history.pushState(null, null, '/home')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
+  }
+
+  changeBackgroundColor (projectId) {
+    if (!this.canvas) return
+    
+    // Define project colors (same as Home page)
+    const projectColors = {
+      'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
+      'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
+      'popeyes': { r: 221, g: 26, b: 35 }, // #dd1a23
+      'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
+      'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
+      'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
+      'turning-tide': { r: 162, g: 138, b: 112 }, // #a28a70
+      'idris-elba': { r: 0, g: 0, b: 0 }, // black
+      'ocb': { r: 62, g: 90, b: 164 }, // #3e5aa4
+      'jack-daniels': { r: 128, g: 128, b: 128 }, // grey
+      'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
+    }
+    
+    const targetColor = projectColors[projectId]
+    if (targetColor) {
+      console.log('Changing case page canvas background for project:', projectId, targetColor)
+      
+      // Animate canvas background color
+      GSAP.to(this.canvas.background, {
+        r: targetColor.r,
+        g: targetColor.g,
+        b: targetColor.b,
+        duration: 0.5,
+        ease: 'power2.inOut'
+      })
+    }
   }
 
   async hide () {
@@ -304,6 +370,17 @@ export default class extends Page {
     this.elements.wrapper.classList.remove(this.classes.caseActive)
 
     this.element.classList.remove(this.classes.active)
+
+    // Reset canvas background to default when leaving case page
+    // if (this.canvas) {
+    //   GSAP.to(this.canvas.background, {
+    //     r: 248,
+    //     g: 248,
+    //     b: 248,
+    //     duration: 0.5,
+    //     ease: 'power2.inOut'
+    //   })
+    // }
 
     // Clean up intersection observer
     if (this.descriptionObserver) {

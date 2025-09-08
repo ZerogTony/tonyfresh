@@ -156,11 +156,11 @@ class App {
   }
 
   createHome () {
-    this.home = new Home()
+    this.home = new Home(this.canvas)
   }
 
   createCase () {
-    this.case = new Case()
+    this.case = new Case(this.canvas)
   }
 
 

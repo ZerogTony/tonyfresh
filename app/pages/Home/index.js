@@ -4,7 +4,7 @@ import GSAP from 'gsap'
 import { delay } from 'utils/math'
 
 export default class extends Page {
-  constructor () {
+  constructor (canvas) {
     super({
       classes: {
         active: 'home--active'
@@ -21,6 +21,7 @@ export default class extends Page {
 
     this.hasTransitionPlayed = false
     this.animatedProjects = new Set()
+    this.canvas = canvas
     this.create()
   }
 
@@ -83,6 +84,20 @@ export default class extends Page {
     this.list.disable()
     this.element.classList.remove(this.classes.active)
 
+    // Reset canvas background to default
+    if (this.canvas) {
+      GSAP.to(this.canvas.background, {
+        r: 248,
+        g: 248,
+        b: 248,
+        duration: 0.5,
+        ease: 'power2.inOut'
+      })
+    }
+    
+    // Reset text colors to default
+    this.setLightTextMode(false)
+
     // Clean up intersection observer
     if (this.observer) {
       this.observer.disconnect()
@@ -116,6 +131,9 @@ export default class extends Page {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const projectId = entry.target.dataset.projectId || entry.target.querySelector('.home__link').href.split('/').pop()
+          
+          // Change background color based on visible project
+          this.changeBackgroundColor(projectId)
           
           if (!this.animatedProjects.has(projectId)) {
             this.animateProjectIn(entry.target)
@@ -251,7 +269,7 @@ export default class extends Page {
     
     if (textElements.length > 0) {
       GSAP.to(textElements, {
-        y: '-100%',
+        y: '100%',
         opacity: 0,
         duration: immediate ? 0.4 : 0.5,
         ease: immediate ? 'power2.in' : 'expo.in',
@@ -260,6 +278,107 @@ export default class extends Page {
         transformOrigin: 'center center'
       })
     }
+  }
+
+  changeBackgroundColor (projectId) {
+    if (!this.canvas) return
+    
+    // Define project colors (RGB values for canvas)
+    const projectColors = {
+      'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
+      'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
+      'popeyes': { r: 221, g: 26, b: 35 }, // #dd1a23
+      'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
+      'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
+      'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
+      'turning-tide': { r: 162, g: 138, b: 112 }, // #a28a70
+      'idris-elba': { r: 0, g: 0, b: 0 }, // black
+      'ocb': { r: 62, g: 90, b: 164 }, // #3e5aa4
+      'jack-daniels': { r: 128, g: 128, b: 128 }, // grey
+      'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
+    }
+    
+    // Dark backgrounds that need light text
+    const darkBackgrounds = ['idris-elba', 'ocb', 'ffmag']
+    
+    const targetColor = projectColors[projectId]
+    if (targetColor) {
+      console.log('Changing canvas background for project:', projectId, targetColor)
+      
+      // Animate canvas background color
+      GSAP.to(this.canvas.background, {
+        r: targetColor.r,
+        g: targetColor.g,
+        b: targetColor.b,
+        duration: 0.5,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          // Update overlay colors as the background animates
+          this.updateOverlayColors(projectId)
+        }
+      })
+      
+      // Change text color based on background darkness
+      if (darkBackgrounds.includes(projectId)) {
+        this.setLightTextMode(true)
+      } else {
+        this.setLightTextMode(false)
+      }
+    }
+  }
+
+  setLightTextMode(isLight) {
+    const textColor = isLight ? '#ffffff' : ''
+    const duration = 0.5
+    
+    // Home page text
+    GSAP.to('.home', {
+      color: textColor,
+      duration: duration,
+      ease: 'power2.inOut'
+    })
+    
+    // Navigation elements
+    GSAP.to('.navigation__link', {
+      color: textColor,
+      duration: duration,
+      ease: 'power2.inOut'
+    })
+    
+    // Logo invert for dark backgrounds
+    const logoImg = document.querySelector('.navigation__item:first-child img')
+    if (logoImg) {
+      GSAP.to(logoImg, {
+        filter: isLight ? 'invert(0)' : 'invert(1)',
+        duration: duration,
+        ease: 'power2.inOut'
+      })
+    }
+    
+    // Easter egg button
+    const easterBtn = document.querySelector('.navigation__easter')
+    if (easterBtn) {
+      GSAP.to(easterBtn, {
+        backgroundColor: isLight ? '#ffffff' : '#2c2c2c',
+        duration: duration,
+        ease: 'power2.inOut'
+      })
+    }
+  }
+
+  updateOverlayColors(projectId) {
+    if (!this.canvas) return
+    
+    // Get the current canvas background color
+    const currentBg = this.canvas.background
+    const overlayColor = `rgb(${Math.round(currentBg.r)}, ${Math.round(currentBg.g)}, ${Math.round(currentBg.b)})`
+    
+    // Update overlay colors to match current background
+    GSAP.to([this.elements.overlayTop, this.elements.overlayBottom], {
+      backgroundColor: overlayColor,
+      duration: 0.5,
+      ease: 'power2.inOut'
+    })
   }
 
   onResize () {

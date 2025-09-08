@@ -10,16 +10,6 @@
     opacity: 1;
   }
 
-  &:before {
-    border: 0.5rem solid currentColor;
-    bottom: 0;
-    content: '';
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 1;
-  }
 
   @include media('<=phone') {
     margin-bottom: 10rem;

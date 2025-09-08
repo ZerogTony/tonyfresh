@@ -17,6 +17,51 @@ html {
   @include media('<=phone') {
     font-size: calc(100vw / 375 * 10);
   }
+
+  // Project-specific background colors for html
+  &.project-sazy {
+    background: #a68e7c !important;
+  }
+
+  &.project-ffmag {
+    background: #83715f !important;
+  }
+
+  &.project-popeyes {
+    background: #dd1a23 !important;
+  }
+
+  &.project-boxpark {
+    background: #fffd3c !important;
+  }
+
+  &.project-spotify {
+    background: #eeeeee !important;
+  }
+
+  &.project-stoli {
+    background: #ff0042 !important;
+  }
+
+  &.project-turning-tide {
+    background: #a28a70 !important;
+  }
+
+  &.project-idris-elba {
+    background: black !important;
+  }
+
+  &.project-ocb {
+    background: #3e5aa4 !important;
+  }
+
+  &.project-jack-daniels {
+    background: grey !important;
+  }
+
+  &.project-inbound {
+    background: #fdcb47 !important;
+  }
 }
 
 body {
@@ -31,6 +76,51 @@ body {
   top: 0;
   width: 100%;
   transition: background-color 0.5s ease-in-out;
+
+  // Project-specific background colors - more specific
+  &.project-sazy {
+    background: #a68e7c !important;
+  }
+
+  &.project-ffmag {
+    background: #83715f !important;
+  }
+
+  &.project-popeyes {
+    background: #dd1a23 !important;
+  }
+
+  &.project-boxpark {
+    background: #fffd3c !important;
+  }
+
+  &.project-spotify {
+    background: #eeeeee !important;
+  }
+
+  &.project-stoli {
+    background: #ff0042 !important;
+  }
+
+  &.project-turning-tide {
+    background: #a28a70 !important;
+  }
+
+  &.project-idris-elba {
+    background: black !important;
+  }
+
+  &.project-ocb {
+    background: #3e5aa4 !important;
+  }
+
+  &.project-jack-daniels {
+    background: grey !important;
+  }
+
+  &.project-inbound {
+    background: #fdcb47 !important;
+  }
 }
 
 *,

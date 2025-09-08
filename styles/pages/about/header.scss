@@ -3,6 +3,7 @@
   margin-bottom: 20rem;
   text-align: center;
   padding-top: 10rem;
+  border: none;
 
   @include media('<=phone') {
     padding-top: 5rem;
