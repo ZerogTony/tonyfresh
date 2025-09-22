@@ -2,7 +2,7 @@
     @extend %cover;
     @extend %page;
    z-index: 10000;
-    overflow: hidden;
+    overflow: visible;
     // Remove transitions to prevent fade-in/out effects
     transition: none !important;
     background-color: rgb(17, 17, 17);
@@ -97,7 +97,7 @@
   height: 100vh;
   pointer-events: none;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
 
   @include media('<=phone') {
     padding: 1rem 1rem;
@@ -110,19 +110,19 @@
 
 .intro__wrapper {
   position: relative;
-  width: 70vw;
+  width: 90vw;
   height: 100%;
   margin: 0 auto;
 
-  @include media('<=tablet') {
-    width: 85vw;
+  @include media('<=900px') {
+    width: 98vw;
   }
 
   @include media('<=phone') {
-    width: 95%;
+    width: 100%;
   }
 
   @include media('<=320px') {
-    width: 98%;
+    width: 100%;
   }
 }

@@ -186,7 +186,7 @@ class App {
     // Special letterbox transition when going FROM intro TO homepage
     if (previousUrl === '/' && this.url === '/home') {
       // First, reverse all intro animations (intro handles this in its hide method)
-      await this.page.hide()
+      await this.page.hide(this.url)
       
       // Use global overlay for the letterbox transition (stays available between pages)
       if (this.globalOverlay.overlayTop && this.globalOverlay.overlayBottom) {
@@ -222,7 +222,7 @@ class App {
       }
     } else {
       // Normal transition for other pages
-      await this.page.hide()
+      await this.page.hide(this.url)
 
       if (push) {
         window.history.pushState({}, document.title, url)
@@ -394,7 +394,7 @@ class App {
     each(links, link => {
       const isLocal = link.href.indexOf(window.location.origin) > -1
 
-      if (isLocal) {
+      if (isLocal && !link.classList.contains('case__back')) {
         link.onclick = event => {
           event.preventDefault()
 

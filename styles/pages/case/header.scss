@@ -8,6 +8,12 @@
 
   margin: auto;
   width: 70%;
+
+  @include media('<=phone') {
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .case__media__image {
@@ -28,8 +34,10 @@
 
 .case__title {
   font: 23rem/0.8 $font-ampersand;
+  font-weight: 900;
   line-height: 1.4;
   padding: 0 2rem;
+  margin-top: 8rem;
   margin-bottom: 5rem;
   position: relative;
   text-align: center;

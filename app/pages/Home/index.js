@@ -71,7 +71,7 @@ export default class extends Page {
     return tl;
   }
 
-  async hide () {
+  async hide (nextUrl) {
     // Dispatch event to lock hover animations
     window.dispatchEvent(new CustomEvent('homeTransitionStart'))
     
@@ -84,19 +84,24 @@ export default class extends Page {
     this.list.disable()
     this.element.classList.remove(this.classes.active)
 
-    // Reset canvas background to default
-    if (this.canvas) {
-      GSAP.to(this.canvas.background, {
-        r: 248,
-        g: 248,
-        b: 248,
-        duration: 0.5,
-        ease: 'power2.inOut'
-      })
-    }
+    // Only reset background and text colors if NOT going to a case page
+    const isGoingToCasePage = nextUrl && nextUrl.indexOf('/case') > -1
     
-    // Reset text colors to default
-    this.setLightTextMode(false)
+    if (!isGoingToCasePage) {
+      // Reset canvas background to default
+      if (this.canvas) {
+        GSAP.to(this.canvas.background, {
+          r: 248,
+          g: 248,
+          b: 248,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+      
+      // Reset text colors to default
+      this.setProjectTextColors('default', '#2c2c2c')
+    }
 
     // Clean up intersection observer
     if (this.observer) {
@@ -298,14 +303,26 @@ export default class extends Page {
       'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
     }
     
-    // Dark backgrounds that need light text
-    const darkBackgrounds = ['idris-elba', 'ocb', 'ffmag']
+    // Define text colors for each project
+    const projectTextColors = {
+      'sazy': '#F7F7F7',
+      'ffmag': '#D9CEC3', 
+      'popeyes': '#FFE6E8', // much lighter pink for better contrast on red
+      'boxpark': '#2C2C00', // dark olive for better contrast on yellow
+      'spotify': '#B3A4A4',
+      'stoli': '#ffffff', // fine as is
+      'turning-tide': '#ffffff', // fine as is
+      'idris-elba': '#ffffff', // fine as is (portenoire)
+      'ocb': '#B8CCFF', // much lighter blue for better contrast on blue
+      'jack-daniels': '#ffffff', // fine as is
+      'inbound': '#FFF4C4' // much lighter yellow for better contrast on yellow
+    }
     
     const targetColor = projectColors[projectId]
     if (targetColor) {
       console.log('Changing canvas background for project:', projectId, targetColor)
       
-      // Animate canvas background color
+      // Animate canvas background color with gradients and navigation updating in real-time
       GSAP.to(this.canvas.background, {
         r: targetColor.r,
         g: targetColor.g,
@@ -313,23 +330,19 @@ export default class extends Page {
         duration: 0.5,
         ease: 'power2.inOut',
         onUpdate: () => {
-          // Update overlay colors as the background animates
-          this.updateOverlayColors(projectId)
+          // Update background gradients and navigation color as the background animates
+          this.updateBackgroundGradients()
         }
       })
       
-      // Change text color based on background darkness
-      if (darkBackgrounds.includes(projectId)) {
-        this.setLightTextMode(true)
-      } else {
-        this.setLightTextMode(false)
-      }
+      // Change text color to match the project
+      this.setProjectTextColors(projectId, projectTextColors[projectId])
     }
   }
 
-  setLightTextMode(isLight) {
-    const textColor = isLight ? '#ffffff' : ''
+  setProjectTextColors(projectId, textColor) {
     const duration = 0.5
+    const isLightText = textColor === '#ffffff'
     
     // Home page text
     GSAP.to('.home', {
@@ -345,41 +358,59 @@ export default class extends Page {
       ease: 'power2.inOut'
     })
     
-    // Logo invert for dark backgrounds
+    // Logo invert based on text color
     const logoImg = document.querySelector('.navigation__item:first-child img')
     if (logoImg) {
       GSAP.to(logoImg, {
-        filter: isLight ? 'invert(0)' : 'invert(1)',
+        filter: isLightText ? 'invert(0)' : 'invert(1)',
         duration: duration,
         ease: 'power2.inOut'
       })
     }
     
-    // Easter egg button
+    // Easter egg button - use contrasting color to text
     const easterBtn = document.querySelector('.navigation__easter')
     if (easterBtn) {
+      const buttonColor = isLightText ? '#ffffff' : '#2c2c2c'
       GSAP.to(easterBtn, {
-        backgroundColor: isLight ? '#ffffff' : '#2c2c2c',
+        backgroundColor: buttonColor,
         duration: duration,
         ease: 'power2.inOut'
       })
     }
   }
 
-  updateOverlayColors(projectId) {
+  setLightTextMode(isLight) {
+    // Keep this function for backwards compatibility
+    this.setProjectTextColors('default', isLight ? '#ffffff' : '#2c2c2c')
+  }
+
+  updateBackgroundGradients() {
     if (!this.canvas) return
-    
+
     // Get the current canvas background color
     const currentBg = this.canvas.background
-    const overlayColor = `rgb(${Math.round(currentBg.r)}, ${Math.round(currentBg.g)}, ${Math.round(currentBg.b)})`
-    
-    // Update overlay colors to match current background
-    GSAP.to([this.elements.overlayTop, this.elements.overlayBottom], {
-      backgroundColor: overlayColor,
-      duration: 0.5,
-      ease: 'power2.inOut'
-    })
+    const bgColor = `rgb(${Math.round(currentBg.r)}, ${Math.round(currentBg.g)}, ${Math.round(currentBg.b)})`
+
+    // Update the gradient backgrounds to match current color
+    const topGradient = document.querySelector('.home__background__top')
+    const bottomGradient = document.querySelector('.home__background__bottom')
+
+    if (topGradient) {
+      topGradient.style.background = `linear-gradient(to bottom, ${bgColor} 0%, transparent 100%)`
+    }
+
+    if (bottomGradient) {
+      bottomGradient.style.background = `linear-gradient(to bottom, transparent 0%, ${bgColor} 100%)`
+    }
+
+    // Update navigation background to match current color
+    const navBgElement = document.querySelector('.navigation__background')
+    if (navBgElement) {
+      navBgElement.style.setProperty('--nav-bg-color', bgColor)
+    }
   }
+
 
   onResize () {
     super.onResize()

@@ -1,5 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -75,6 +76,8 @@ module.exports = {
   },
 
   plugins: [
+    // CleanWebpackPlugin removed - was causing build output to be deleted
+    
     new webpack.DefinePlugin({
       IS_DEVELOPMENT
     }),
@@ -168,7 +171,7 @@ module.exports = {
       },
 
       {
-        test: /\.(woff2?)$/,
+        test: /\.(woff2?|ttf)$/,
         loader: 'file-loader',
         options: {
           name (file) {

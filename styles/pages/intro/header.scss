@@ -18,23 +18,40 @@
   height: auto;
   overflow: visible;
 
-  @include media('<phone') {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    padding: 2rem 0;
+  @include media('<=900px') {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 3rem 2rem;
+    height: auto;
+    width: 90vw;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  @include media('<=phone') {
+    padding: 2rem 1rem;
+    min-height: 100vh;
   }
 
 }
 
 .intro__wrapper {
-  width: 70vw;
+  width: 90vw;
   position: relative;
   
+  @include media('<=900px') {
+    width: 98vw;
+    max-width: none;
+  }
 
-  @include media('<phone') {
-    width: 95%;
+  @include media('<=phone') {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -47,7 +64,33 @@
   color: $color-pine-tree;
   text-align: center;
   width: 100%;
+  padding: 0 2rem;
+  overflow: visible;
   
+  @include media('<=900px') {
+    position: static;
+    transform: none;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  @include media('<=phone') {
+    /* Completely new mobile layout */
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    width: calc(100% - 4rem);
+    height: auto;
+    margin-bottom: 0;
+    padding: 0;
+    display: block;
+    transform: none;
+    text-align: left;
+  }
 }
 
 .intro__header__title {
@@ -55,13 +98,17 @@
   display: block;
   text-align: center;
   color: white;
+  width: 100%;
+  letter-spacing: -0.03em;
 
-  @include media('<=tablet') {
+  @include media('<=900px') {
     font-size: 10rem;
   }
 
   @include media('<=phone') {
     font-size: 5rem;
+    text-align: left; /* Align to left on mobile */
+    width: 100%;
   }
 
   @include media('<=320px') {
@@ -74,6 +121,15 @@
   position: relative;
   display: block;
   width: 100%;
+  overflow: visible;
+
+  @include media('<=phone') {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align to left instead of center */
+    width: 100%;
+    overflow: visible;
+  }
 }
 
 .intro__header__title__center {
@@ -87,12 +143,26 @@
   overflow: visible;
   position: relative;
   
+  @include media('<=900px') {
+    margin-bottom: 1rem;
+  }
+
+  @include media('<=phone') {
+    align-items: flex-start; /* Align to left on mobile */
+    text-align: left;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .intro__header__title__text {
   display: block;
   overflow: hidden;
   flex: none;
+  padding: 0 3rem;
+
+  @include media('<=phone') {
+    padding: 0 1rem;
+  }
 
   span {
     display: inline-block;
@@ -114,35 +184,57 @@
     span {
       color: white;
       font-size: 4rem;
-      font-weight: 300;
+      font-weight: 900;
       line-height: 1;
 
-      @include media('<=tablet') {
-        font-size: 3rem;
+      @include media('<=900px') {
+        font-size: 4rem;
       }
 
       @include media('<=phone') {
-        font-size: 2rem;
+        font-size: 1.8rem;
       }
 
       @include media('<=320px') {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
       }
     }
 
-    @include media('<=tablet') {
-      top: -1.5rem;
-      left: -6rem;
-    }
-
-    @include media('<=phone') {
-      top: -1rem;
+    @include media('<=900px') {
+      top: -1.2rem;
       left: -4rem;
     }
 
+    @include media('<=phone') {
+      /* Place Tim Andrews at top left of screen */
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      text-align: left;
+      margin: 0;
+      padding: 0;
+      z-index: 1000;
+      transform: none;
+      display: block;
+      
+      span {
+        font-size: 2.5rem;
+        font-weight: 200;
+        color: white;
+        line-height: 1.1;
+        white-space: pre-line; /* Allow line breaks */
+        margin: 0;
+        padding: 0;
+        display: block;
+      }
+    }
+
     @include media('<=320px') {
-      top: -0.8rem;
-      left: -3rem;
+      /* Adjust font size for small screens */
+      span {
+        font-size: 2rem;
+        font-weight: 200;
+      }
     }
   }
 
@@ -159,35 +251,60 @@
     span {
       color: white;
       font-size: 4rem;
-      font-weight: 300;
+      font-weight: 900;
       line-height: 1;
 
-      @include media('<=tablet') {
-        font-size: 3rem;
+      @include media('<=900px') {
+        font-size: 4rem;
       }
 
       @include media('<=phone') {
-        font-size: 2rem;
+        font-size: 1.8rem;
       }
 
       @include media('<=320px') {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
       }
     }
 
-    @include media('<=tablet') {
-      top: -1.5rem;
-      right: -6rem;
-    }
-
-    @include media('<=phone') {
-      top: -1rem;
+    @include media('<=900px') {
+      top: -1.2rem;
       right: -4rem;
     }
 
+    @include media('<=phone') {
+      /* Portfolio 25 below Digital Design with generous breathing room */
+      position: fixed;
+      top: 12rem; /* Much more space below Digital Design (8.5rem + ~3.5rem) */
+      left: 2rem;
+      right: auto;
+      text-align: left;
+      margin: 0;
+      padding: 0;
+      z-index: 1000;
+      transform: none;
+      display: block;
+      
+      span {
+        font-size: 1.2rem;
+        font-weight: 200;
+        color: rgba(255, 255, 255, 0.7); /* Slightly transparent */
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 0;
+        padding: 0;
+        display: block;
+      }
+    }
+
     @include media('<=320px') {
-      top: -0.8rem;
-      right: -3rem;
+      /* Adjust for small screens */
+      top: 10.5rem;
+      left: 1.5rem;
+      
+      span {
+        font-size: 1rem;
+      }
     }
   }
 
@@ -195,10 +312,37 @@
     text-align: center;
     display: block;
     margin: 0;
+    letter-spacing: -0.09em;
     overflow: hidden;
-    padding-top: 1rem;
-    padding-bottom: 2rem;
+    padding: 1rem 4rem 2rem 4rem;
     margin-bottom: -3rem;
+    
+    @include media('<=phone') {
+      /* Digital Design below Tim Andrews with generous breathing room */
+      position: fixed;
+      top: 8.5rem; /* Much more space below Tim Andrews */
+      left: 2rem;
+      text-align: left;
+      padding: 0;
+      margin: 0;
+      z-index: 1000;
+      width: auto;
+      transform: none;
+      display: block;
+    }
+
+    @include media('<=320px') {
+      /* Adjust for small screens */
+      top: 7.5rem;
+      left: 1.5rem;
+    }
+    
+    /* Hide all other center-text elements except the first one on mobile */
+    &:not(:first-child) {
+      @include media('<=phone') {
+        display: none !important;
+      }
+    }
     
     &:last-child {
       margin-bottom: 0;
@@ -206,21 +350,31 @@
     
     span {
       color: rgb(201, 178, 178);
-      font-size: 20rem;
-      font-weight: 400;
+      font-size: 30rem;
+      font-weight: 200;
       line-height: 0.7;
-      font-variation-settings: "wght" 500;
+      font-variation-settings: "wght" 900;
 
-      @include media('<=tablet') {
-        font-size: 15rem;
+      @include media('<=900px') {
+        font-size: 30rem;
       }
 
       @include media('<=phone') {
-        font-size: 8rem;
+        /* Style for "Digital Design" */
+        font-size: 1.4rem;
+        font-weight: 300;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        line-height: 1.2;
+        white-space: pre-line; /* Allow line breaks */
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block;
       }
 
       @include media('<=320px') {
-        font-size: 6rem;
+        font-size: 1.2rem;
       }
     }
   }
@@ -231,7 +385,7 @@
     font-weight: 100;
     font-size: 11rem;
 
-    @include media('<=tablet') {
+    @include media('<=900px') {
       font-size: 7rem;
     }
 
@@ -255,20 +409,16 @@
   transform: translateX(-50%);
   overflow: hidden;
 
-  @include media('<=tablet') {
-    height: 180px;
-    margin: 2.5rem auto 1.8rem auto;
+  @include media('<=900px') {
+    display: none;
   }
 
   @include media('<=phone') {
-    margin: 2rem auto 1.5rem auto;
-    height: 120px;
-    width: 90vw;
+    display: none;
   }
 
   @include media('<=320px') {
-    height: 100px;
-    margin: 1.5rem auto 1rem auto;
+    display: none;
   }
 }
 
@@ -281,7 +431,7 @@
 
 .intro__enter {
   position: absolute;
-  bottom: -17rem;
+  bottom: -25rem;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
@@ -292,10 +442,50 @@
   cursor: pointer;
   z-index: 3;
   
+  // Ensure centering on desktop
+  @media (min-width: 901px) {
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
 
-  @include media('<=tablet') {
-    font-size: 2.5rem;
-    bottom: -9rem;
+  @include media('<=900px') {
+    font-size: 4rem;
+    position: static;
+    transform: none;
+    margin-top: 3rem;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    a {
+      display: inline-block;
+      margin: 0 auto;
+      text-align: center;
+    }
+  }
+
+  @include media('<=phone') {
+    /* Place Selected Works in bottom right corner on mobile */
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    left: auto;
+    transform: none;
+    margin-top: 0;
+    width: auto;
+    display: block;
+    font-size: 1.6rem;
+    z-index: 100;
+    
+    a {
+      display: inline-block;
+      margin: 0;
+      text-align: right;
+      color: white;
+    }
   }
 
   a {
@@ -342,14 +532,11 @@
     }
   }
 
-  @include media('<=phone') {
-    font-size: 1.6rem;
-    bottom: -6rem;
-  }
-
   @include media('<=320px') {
+    /* Adjust positioning for very small screens */
+    bottom: 1.5rem;
+    right: 1.5rem;
     font-size: 1.4rem;
-    bottom: -5rem;
   }
 }
 

@@ -200,7 +200,7 @@ export default class extends Page {
     this.elements.wrapper.classList.add(this.classes.caseActive)
 
     // Change canvas background to match project color
-    // this.changeBackgroundColor(id)
+    this.changeBackgroundColor(id)
 
     this.scroll.limit = this.elements.wrapper.clientHeight - window.innerHeight
 
@@ -275,46 +275,46 @@ export default class extends Page {
     console.log('=== BACK TO WORK CLICKED ===')
     console.log('Current scroll position:', this.scroll.current)
     console.log('Scroll target:', this.scroll.target)
-    console.log('Page content visible before scroll:', this.elements.wrapper.style.opacity)
-    
-    // Check if we need to scroll (only scroll if we're not already at the top)
-    if (this.scroll.current > 50) { // If we're more than 50px from top
-      console.log('🚀 Scrolling to top...')
-      // First, dramatically shoot to top
-      GSAP.to(this.scroll, {
-        current: 0,
-        target: 0,
-        duration: 0.5,
-        ease: 'power3.out',
-        onUpdate: () => {
-          console.log('Scrolling... current position:', this.scroll.current)
-        },
-        onComplete: () => {
-          console.log('✅ Scroll complete, proceeding with navigation')
-          this.proceedWithNavigation()
-        }
-      })
-    } else {
-      console.log('Already at top, proceeding immediately')
-      this.proceedWithNavigation()
-    }
+
+    // Directly animate both current and target for immediate fast scroll
+    GSAP.to(this.scroll, {
+      current: 0,
+      target: 0,
+      duration: 0.50,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        console.log('Scrolling... current position:', this.scroll.current, 'target:', this.scroll.target)
+      },
+      onComplete: () => {
+        console.log('🏁 Scroll animation complete, starting image fade...')
+        this.proceedWithNavigation()
+      }
+    })
   }
 
   proceedWithNavigation() {
     console.log('🎬 Starting navigation transition...')
-    
+
     // Fade out images and navigate
     const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
     console.log('Images found for fade out:', images.length)
-    
+    console.log('Images:', images)
+    console.log('Current wrapper:', this.elements.wrapper)
+
     if (images.length > 0) {
+      // Check current opacity of first image
+      console.log('Current opacity of first image:', window.getComputedStyle(images[0]).opacity)
+
       GSAP.to(images, {
         opacity: 0,
-        duration: 0.6,
+        duration: 0.2,
         ease: 'power2.out',
-        stagger: 0.03,
+        stagger: 0.01,
         onStart: () => {
           console.log('🖼️ Starting image fade out...')
+        },
+        onUpdate: () => {
+          console.log('Fading images, first image opacity:', window.getComputedStyle(images[0]).opacity)
         },
         onComplete: () => {
           console.log('✅ Image fade complete, navigating to home')
@@ -361,26 +361,67 @@ export default class extends Page {
         duration: 0.5,
         ease: 'power2.inOut'
       })
+
+      // Also animate navigation bar background to match
+      const navElement = document.querySelector('.navigation')
+      if (navElement) {
+        const navBackgroundColors = {
+          'sazy': 'rgb(220, 210, 200)',
+          'ffmag': 'rgb(131, 113, 95)',
+          'popeyes': 'rgb(221, 26, 35)',
+          'boxpark': 'rgb(255, 253, 60)',
+          'spotify': 'rgb(238, 238, 238)',
+          'stoli': 'rgb(255, 0, 66)',
+          'turning-tide': 'rgb(162, 138, 112)',
+          'idris-elba': 'rgb(0, 0, 0)',
+          'ocb': 'rgb(62, 90, 164)',
+          'jack-daniels': 'rgb(128, 128, 128)',
+          'inbound': 'rgb(253, 203, 71)',
+          'default': 'rgb(248, 248, 248)'
+        }
+        
+        const targetNavColor = navBackgroundColors[projectId] || navBackgroundColors['default']
+        GSAP.to(navElement, {
+          '--nav-bg-color': targetNavColor,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
     }
   }
 
-  async hide () {
+  async hide (nextUrl) {
     this.scroll.target = 0
 
     this.elements.wrapper.classList.remove(this.classes.caseActive)
 
     this.element.classList.remove(this.classes.active)
 
-    // Reset canvas background to default when leaving case page
-    // if (this.canvas) {
-    //   GSAP.to(this.canvas.background, {
-    //     r: 248,
-    //     g: 248,
-    //     b: 248,
-    //     duration: 0.5,
-    //     ease: 'power2.inOut'
-    //   })
-    // }
+    // Only reset background and navigation to default when NOT going back to home page
+    const isGoingToHome = nextUrl && nextUrl === '/home'
+    
+    if (!isGoingToHome) {
+      // Reset canvas background and navigation to default when leaving case page
+      if (this.canvas) {
+        GSAP.to(this.canvas.background, {
+          r: 248,
+          g: 248,
+          b: 248,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+
+      // Reset navigation bar background to default
+      const navElement = document.querySelector('.navigation')
+      if (navElement) {
+        GSAP.to(navElement, {
+          '--nav-bg-color': 'rgb(248, 248, 248)',
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+    }
 
     // Clean up intersection observer
     if (this.descriptionObserver) {

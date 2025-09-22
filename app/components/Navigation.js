@@ -86,6 +86,16 @@ export default class extends Component {
         this.elements.easter.style.transition = 'transform 0.4s cubic-bezier(0.645, 0.045, 0.355, 1), background-color 0.5s ease-in-out'
         this.elements.easter.style.backgroundColor = offBlackText // Light color for dark background
       }
+
+      // Update navigation bar background to dark color
+      const navBgElement = document.querySelector('.navigation__background')
+      if (navBgElement) {
+        GSAP.to(navBgElement, {
+          '--nav-bg-color': offBlack,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
   
       // Hide gradients completely
       if (this.homeBottom) {
@@ -141,6 +151,16 @@ export default class extends Component {
       if (this.elements.easter) {
         this.elements.easter.style.transition = 'transform 0.4s cubic-bezier(0.645, 0.045, 0.355, 1), background-color 0.5s ease-in-out'
         this.elements.easter.style.backgroundColor = '#2c2c2c' // Dark grey for light background (approximate $color-iron)
+      }
+
+      // Revert navigation bar background to light color
+      const navBgElement = document.querySelector('.navigation__background')
+      if (navBgElement) {
+        GSAP.to(navBgElement, {
+          '--nav-bg-color': offWhite,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
       }
   
       // Hide gradients completely

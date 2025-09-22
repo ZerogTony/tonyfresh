@@ -38,21 +38,51 @@
 }
 
 // ────────────────────────────────────────
-// 2) Grid for small (layout: grid) videos
+// 2) Grid for narrow images (max 2 per row)
+// ────────────────────────────────────────
+.case__gallery__narrow-grid {
+  display: flex;
+  flex-wrap: wrap;
+  width: 90%; // Match the width of full-width images
+  max-width: 192rem; // Match the max-width of full-width images  
+  gap: 2rem;
+  margin: 2rem auto;
+
+  .narrow-image {
+    flex: 0 0 calc(50% - 1rem); // Each image takes exactly 50% minus gap
+    
+    .case__gallery__media__box {
+      width: 100%; // Override the 90% width to use full available space
+      max-width: none; // Remove max-width constraint to fill available space
+    }
+  }
+
+  // When there's an odd number, center the last one but keep alignment
+  .narrow-image:last-child:nth-child(odd) {
+    flex: 0 0 calc(50% - 1rem); // Keep same width as others
+    
+    .case__gallery__media__box {
+      margin: 0 auto; // Center the image box within its space
+      max-width: 81rem; // Restore original narrow image max-width for centering
+    }
+  }
+}
+
+// ────────────────────────────────────────
+// 3) Grid for small (layout: grid) videos
 // ────────────────────────────────────────
 .case__gallery__video-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   row-gap: 2rem;
   column-gap: 2rem;
-  margin-top: 0;
-  margin-right: 0;
-  margin-bottom: 2rem;
-  margin-left: 0;
+  margin: 2rem auto;
+  width: 90%;
+  max-width: 192rem;
 }
 
 // ────────────────────────────────────────
-// 3) Flex‑column for full‑width videos
+// 4) Flex‑column for full‑width videos
 // ────────────────────────────────────────
 .case__gallery__videos {
   display: flex;
@@ -65,11 +95,15 @@
 }
 
 // ────────────────────────────────────────────────
-// Remove any global margin‑top on each .media item
-// (we’ll rely on the wrapper’s gap settings instead)
+// Add consistent spacing between all gallery items
 // ────────────────────────────────────────────────
 .case__gallery__media {
   margin-top: 0 !important;
+
+  // Add consistent 2rem spacing between regular gallery images (but not video containers)
+  &:not(:first-child):not(.narrow-image):not(.video-container) {
+    margin-top: 2rem !important;
+  }
 }
 
 // Box wrapper for both images and videos
@@ -174,7 +208,6 @@
   height: 100%;
   opacity: 0;
   pointer-events: none;
-  border-radius: 1rem;
   transition-property: opacity;
   transition-duration: 1s;
   transition-timing-function: ease;
@@ -184,12 +217,18 @@
   }
 }
 
+// Full-width video container styling (to match image box constraints)
+.case__gallery__media.video-container:not(.grid-item) {
+  width: 90%;
+  max-width: 192rem;
+  margin: 0 auto;
+}
+
 // Video element styling
 video.case__media__video {
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: 1rem;
 }
 
 // Grid‑item override (just in case)

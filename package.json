@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "npm run development",
-    "build": "webpack -p --progress --config webpack.config.build.js",
+    "build": "SET NODE_OPTIONS=--openssl-legacy-provider && webpack -p --progress --config webpack.config.build.js",
     "development": "cross-env NODE_ENV=dev webpack-dev-server --progress --config webpack.config.development.js",
     "lint": "eslint --config .eslintrc.js *.js",
     "deploy": "cross-env git subtree push --prefix public origin gh-pages"

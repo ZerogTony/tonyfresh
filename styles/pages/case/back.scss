@@ -7,4 +7,14 @@
   text-align: center;
   margin: 2rem auto 8rem auto;
   width: fit-content;
+
+  @include media('<=phone') {
+    font-size: 1.8rem;
+    margin: 1.5rem auto 4rem auto;
+  }
+
+  @include media('<=320px') {
+    font-size: 1.4rem;
+    margin: 1rem auto 3rem auto;
+  }
 }

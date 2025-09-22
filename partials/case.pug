@@ -1,6 +1,6 @@
 //— case.pug —————————————————————————————————————————————————
 
-mixin template({ id, title, company, role, technologies, link, label, gallery, description, videos })
+mixin template({ id, title, company, role, technologies, link, label, gallery, description, videos, narrowGallery })
   article.case(id=id)
     header.case__header
       h3.case__title
@@ -40,6 +40,22 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
                 data-src-webp=`/case/${id}/${content.image}.webp`
                 style=`padding-top: ${content.height/content.width*100}%;`
               )
+
+        //── NARROW IMAGES GRID ─────────────────────────────
+        if narrowGallery
+          .case__gallery__narrow-grid
+            each content in narrowGallery
+              .case__gallery__media.image-container.narrow-image
+                .case__gallery__media__box(style=`max-width: ${content.width/10}rem;`)
+                  span.case__gallery__media__loader
+                    span
+                    span
+                    span
+                  span.case__gallery__media__placeholder(
+                    data-src=`/case/${id}/${content.image}.jpg`
+                    data-src-webp=`/case/${id}/${content.image}.webp`
+                    style=`padding-top: ${content.height/content.width*100}%;`
+                  )
 
         //── VIDEOS ───────────────────────────────────────
         if videos
@@ -133,13 +149,15 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
       { image: '2', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '10', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '11', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    narrowGallery: [
       { image: '4', type: 'screenshot', height: '1080', width: '810' },
       { image: '5', type: 'screenshot', height: '1080', width: '810' },
       { image: '6', type: 'screenshot', height: '1080', width: '810' },
       { image: '7', type: 'screenshot', height: '1080', width: '810' },
       { image: '9', type: 'screenshot', height: '1080', width: '810' },
-    
-
     ]
   })
 
@@ -213,6 +231,7 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
       { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '6', type: 'screenshot', height: '1080', width: '1920'},
       { image: '4', type: 'screenshot', height: '1080', width: '1920' },
       { image: '5', type: 'screenshot', height: '1080', width: '1920' },
   
@@ -273,8 +292,8 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
 
   +template({
     id: 'jack-daniels',
-    title: ' JACK DANIELS',
-    company: 'Maxwells Group',
+    title: ' JD Photobooth',
+    company: 'Jack Daniels',
     role: 'Graphic Designer',
     technologies: 'Graphic Design, Concept Designs',
     description: 'The Covent Garden based venue Roadhouse in collaboration with American Whiskey company Jack Daniels commissioned the vinyl skin design for a Photo-booth being installed in the venue.',
@@ -293,15 +312,18 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     company: 'Freelance',
     role: 'Graphic/Social Media Designer',
     technologies: 'Graphic Design, Social Media Design',
-    description: 'Shaped the magazine’s social media presence through strategic content creation, growing the Instagram and Facebook following to 10.2K. Traveled internationally to capture event coverage in London and Zambia, while maintaining an organized content calendar. Collaborated with the creative team to evolve the magazine’s visual identity, developing comprehensive brand guidelines and ensuring consistent, high-quality design across all platforms',
-   
+    description: 'Shaped the magazine\'s social media presence through strategic content creation, growing the Instagram and Facebook following to 10.2K. Traveled internationally to capture event coverage in London and Zambia, while maintaining an organized content calendar. Collaborated with the creative team to evolve the magazine\'s visual identity, developing comprehensive brand guidelines and ensuring consistent, high-quality design across all platforms',
+
     gallery: [
       { image: '6', type: 'screenshot', height: '1080', width: '1920' },
       { image: '7', type: 'screenshot', height: '1080', width: '1920' },
       { image: '9', type: 'screenshot', height: '1080', width: '1920' },
       { image: '8', type: 'screenshot', height: '1080', width: '1920' },
       { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+    ],
+    narrowGallery: [
       { image: '5', type: 'screenshot', height: '1080', width: '800' },
+      { image: '10', type: 'screenshot', height: '1080', width: '800' },
     ],
   })
 

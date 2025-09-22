@@ -1,13 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm start)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npm install:*)",
-      "Bash(curl:*)",
-      "Bash(npm run build:*)",
-      "Bash(rm:*)"
+      "Bash(npm run clean:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
