@@ -175,7 +175,7 @@ export default class extends Page {
   
   animateCaseTitle() {
     const titleText = this.elements.wrapper.querySelector('.case__title__text')
-    
+
     if (titleText) {
       GSAP.fromTo(titleText, {
         y: '200%'
@@ -186,6 +186,41 @@ export default class extends Page {
         delay: 0.3
       })
     }
+  }
+
+  setupHeaderImageScrollAnimation() {
+    // Target the case__media container which holds the image
+    this.headerMedia = this.elements.wrapper.querySelector('.case__media')
+
+    if (this.headerMedia) {
+      console.log('Header media found:', this.headerMedia)
+      // Store initial scale - starts at 1 and shrinks to 0.4 for very obvious effect
+      this.initialScale = 1
+      this.minScale = 0.4
+    } else {
+      console.log('Header media NOT found')
+    }
+  }
+
+  updateHeaderImageScale() {
+    if (!this.headerMedia) {
+      return
+    }
+
+    // Calculate scale based on scroll position - shrinks over first 800px for gradual visible effect
+    const scrollDistance = 800
+    const scrollProgress = Math.min(this.scroll.current / scrollDistance, 1)
+    const scale = this.initialScale - (scrollProgress * (this.initialScale - this.minScale))
+
+    // Use GSAP ticker to force update and override any conflicting transforms
+    GSAP.ticker.lagSmoothing(0)
+    GSAP.set(this.headerMedia, {
+      x: '-50%',
+      y: '0%',
+      scale: scale,
+      force3D: true,
+      transformOrigin: 'center center'
+    })
   }
 
   /**
@@ -235,6 +270,9 @@ export default class extends Page {
 
     // Animate case title with GSAP
     this.animateCaseTitle()
+
+    // Setup header image scroll animation
+    this.setupHeaderImageScrollAnimation()
 
     return super.show()
   }
@@ -338,7 +376,7 @@ export default class extends Page {
     const projectColors = {
       'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
       'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
-      'popeyes': { r: 221, g: 26, b: 35 }, // #dd1a23
+      'popeyes': { r: 147, g: 114, b: 132 }, // #937284
       'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
       'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
       'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
@@ -368,7 +406,7 @@ export default class extends Page {
         const navBackgroundColors = {
           'sazy': 'rgb(220, 210, 200)',
           'ffmag': 'rgb(131, 113, 95)',
-          'popeyes': 'rgb(221, 26, 35)',
+          'popeyes': 'rgb(147, 114, 132)',
           'boxpark': 'rgb(255, 253, 60)',
           'spotify': 'rgb(238, 238, 238)',
           'stoli': 'rgb(255, 0, 66)',
@@ -444,6 +482,16 @@ export default class extends Page {
     each(this.elements.cases, element => {
       element.limit = element.clientHeight
     })
+  }
+
+  /**
+   * Frames
+   */
+  update () {
+    super.update()
+
+    // Update header image scale based on scroll
+    this.updateHeaderImageScale()
   }
 }
 

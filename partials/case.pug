@@ -45,7 +45,25 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
         if narrowGallery
           .case__gallery__narrow-grid
             each content in narrowGallery
-              .case__gallery__media.image-container.narrow-image
+              if content.fullWidth
+                //- Skip full-width images in narrow grid, render after
+              else
+                .case__gallery__media.image-container.narrow-image
+                  .case__gallery__media__box(style=`max-width: ${content.width/10}rem;`)
+                    span.case__gallery__media__loader
+                      span
+                      span
+                      span
+                    span.case__gallery__media__placeholder(
+                      data-src=`/case/${id}/${content.image}.jpg`
+                      data-src-webp=`/case/${id}/${content.image}.webp`
+                      style=`padding-top: ${content.height/content.width*100}%;`
+                    )
+
+          //- Render full-width images from narrowGallery
+          each content in narrowGallery
+            if content.fullWidth
+              .case__gallery__media.image-container
                 .case__gallery__media__box(style=`max-width: ${content.width/10}rem;`)
                   span.case__gallery__media__loader
                     span
@@ -102,13 +120,16 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     { file: 'whoa.webm' },
   ],
     gallery: [
-      { image: '1', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '6', type: 'screenshot', height: '810', width: '810' },
-      { image: '7', type: 'screenshot', height: '1080', width: '810' },
-      { image: '2', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '5', type: 'screenshot', height: '1080', width: '1080' },
-      
+      { image: '12', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '4', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' },
     ],
+    narrowGallery: [
+      { image: '10', type: 'screenshot', height: '824', width: '595' },
+      { image: '11', type: 'screenshot', height: '824', width: '595' },
+      { image: '1', type: 'screenshot', height: '1080', width: '1920', fullWidth: true },
+    ]
   })
 
 
@@ -122,20 +143,22 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
   technologies: 'Graphic Design',
   description: 'Led visual design at this growing startup, refining and strengthening the company’s brand identity through email campaigns and custom label design. Directed product photoshoots and managed post-production, while maintaining brand consistency through detailed guidelines. Created designs for our website and marketing materials, ensuring a cohesive look and feel across all channels',
   videos: [
-    { file: 'Pescara.webm' },
     { file: 'Dining_chairs.webm', layout: 'grid' },
     { file: 'dining_chairs_2.webm', layout: 'grid' },
-    { file: 'dining_chairs_3.webm', layout: 'grid' },
     { file: 'zeynep.webm', layout: 'grid' },
     { file: 'sofa.webm', layout: 'grid' },
     { file: 'dinner.webm', layout: 'grid' },
   ],
   gallery: [
-    { image: '2', type: 'screenshot', height: 1080, width: 1920 },
-    { image: '4', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '8', type: 'screenshot', height: 1080, width: 1920 },
     { image: '1', type: 'screenshot', height: 1080, width: 1920 },
-    { image: '3', type: 'screenshot', height: 1080, width: 1920 }
-    
+    { image: '3', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '5', type: 'screenshot', height: 1080, width: 1920 },
+    { image: '9', type: 'screenshot', height: 1080, width: 1920 }
+  ],
+  narrowGallery: [
+    { image: '6', type: 'screenshot', height: 810, width: 810 },
+    { image: '7', type: 'screenshot', height: 810, width: 810 }
   ]
 })
 
@@ -190,12 +213,13 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     description: 'The turning tide was a conceptual bench designed as part of a national competition run by the London festival of Architecture.  I and my brother collaborated on the winning design which we were then commissioned to build and install within a month.The theme of the design was "act". Our design interpreted this theme by focusing on the organic transition between mental states, and symbolising the transformative power of rest and reflection on the mind. We wanted the design to portray a fluid change in thought, often the precursor to an act. To connect this idea with the community, we incorporated cages on the sides of the bench, allowing park-goers to leave messages on rocks for future visitors.',
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '2', type: 'screenshot', height: '1080', width: '1080' },
-      { image: '3', type: 'screenshot', height: '1080', width: '1080' },
-      { image: '4', type: 'screenshot', height: '1080', width: '1080' },
-      { image: '5', type: 'screenshot', height: '1080', width: '810' },
-      { image: '6', type: 'screenshot', height: '1080', width: '1440' },
-      { image: '7', type: 'screenshot', height: '1080', width: '1440' }
+      { image: '2', type: 'screenshot', height: '1080', width: '1920' }
+    ],
+    narrowGallery: [
+      { image: '6', type: 'screenshot', height: '810', width: '810' },
+      { image: '7', type: 'screenshot', height: '810', width: '810' },
+      { image: '8', type: 'screenshot', height: '1080', width: '810' },
+      { image: '9', type: 'screenshot', height: '1080', width: '810' }
     ]
   })
 
@@ -262,12 +286,17 @@ mixin template({ id, title, company, role, technologies, link, label, gallery, d
     role: 'Designer',
     technologies: 'Concept Design, Graphic Design',
     description: 'Old Compton Brasserie is a luxury restaurant based in Soho. For the launch of the restaurant our design team was tasked with creating a brand campaign with a limited time and budget to create some attention. While the restaurant was under construction, our design team devised a plan to cover the front paneling with custom made posters made on photoshop. The goal was to emulate the excitement of festival and event posters and being as attention grabbing as possible. we worked with London street artist Anna Lauri, who created the center mural piece.',
+    videos: [
+      { file: 'OCB Logo title animation white on black.mp4' },
+    ],
     gallery: [
       { image: '1', type: 'screenshot', height: '1080', width: '1920' },
       { image: '2', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '3', type: 'screenshot', height: '1080', width: '1080' },
+      { image: '3', type: 'screenshot', height: '1080', width: '1920' },
       { image: '4', type: 'screenshot', height: '1080', width: '1920' },
-      { image: '6', type: 'screenshot', height: '1080', width: '810' }
+      { image: '6', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '8', type: 'screenshot', height: '1080', width: '1920' },
+      { image: '9', type: 'screenshot', height: '1080', width: '1920' }
     ]
   })
 

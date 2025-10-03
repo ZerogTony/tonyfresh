@@ -21,6 +21,12 @@
   .case--active & {
     opacity: 1;
   }
+
+  @include media('<=phone') {
+    width: 90vw;
+    margin-left: calc(-45vw + 50%);
+    position: relative;
+  }
 }
 
 // ────────────────────────────────────────
@@ -44,16 +50,27 @@
   display: flex;
   flex-wrap: wrap;
   width: 90%; // Match the width of full-width images
-  max-width: 192rem; // Match the max-width of full-width images  
+  max-width: 192rem; // Match the max-width of full-width images
   gap: 2rem;
   margin: 2rem auto;
 
+  @include media('<=phone') {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    gap: 0.5rem;
+  }
+
   .narrow-image {
     flex: 0 0 calc(50% - 1rem); // Each image takes exactly 50% minus gap
-    
+
     .case__gallery__media__box {
       width: 100%; // Override the 90% width to use full available space
       max-width: none; // Remove max-width constraint to fill available space
+    }
+
+    @include media('<=phone') {
+      flex: 0 0 calc(50% - 0.25rem); // Adjust for smaller gap on mobile
     }
   }
 
@@ -79,6 +96,17 @@
   margin: 2rem auto;
   width: 90%;
   max-width: 192rem;
+
+  @include media('<=phone') {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    column-gap: 0.5rem;
+  }
+
+  .grid-item {
+    width: 100%;
+  }
 }
 
 // ────────────────────────────────────────
@@ -116,6 +144,12 @@
   margin-left: auto;
   position: relative;
   background: transparent;
+
+  @include media('<=phone') {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 // Fade‑in wrapper for videos
@@ -222,11 +256,18 @@
   width: 90%;
   max-width: 192rem;
   margin: 0 auto;
+
+  @include media('<=phone') {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 // Video element styling
 video.case__media__video {
   display: block;
+  width: 100%;
   max-width: 100%;
   height: auto;
 }

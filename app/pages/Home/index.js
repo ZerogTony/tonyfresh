@@ -292,7 +292,7 @@ export default class extends Page {
     const projectColors = {
       'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
       'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
-      'popeyes': { r: 221, g: 26, b: 35 }, // #dd1a23
+      'popeyes': { r: 147, g: 114, b: 132 }, // #937284
       'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
       'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
       'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
