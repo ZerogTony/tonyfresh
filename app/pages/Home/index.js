@@ -408,6 +408,7 @@ export default class extends Page {
     const navBgElement = document.querySelector('.navigation__background')
     if (navBgElement) {
       navBgElement.style.setProperty('--nav-bg-color', bgColor)
+      navBgElement.style.background = bgColor
     }
   }
 

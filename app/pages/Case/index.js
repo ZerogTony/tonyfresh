@@ -171,8 +171,8 @@ export default class extends Page {
     });
   }
 
-  
-  
+
+
   animateCaseTitle() {
     const titleText = this.elements.wrapper.querySelector('.case__title__text')
 
@@ -188,39 +188,75 @@ export default class extends Page {
     }
   }
 
-  setupHeaderImageScrollAnimation() {
-    // Target the case__media container which holds the image
-    this.headerMedia = this.elements.wrapper.querySelector('.case__media')
-
-    if (this.headerMedia) {
-      console.log('Header media found:', this.headerMedia)
-      // Store initial scale - starts at 1 and shrinks to 0.4 for very obvious effect
-      this.initialScale = 1
-      this.minScale = 0.4
-    } else {
-      console.log('Header media NOT found')
-    }
+  setupBackgroundColorFade() {
+    // Get the case media element to know when to start fading
+    this.caseMedia = this.elements.wrapper.querySelector('.case__media')
+    this.navBackground = document.querySelector('.navigation__background')
+    this.navLinks = document.querySelectorAll('.navigation a, .navigation button')
+    this.whiteColor = { r: 248, g: 248, b: 248 }
+    // projectColor is set in changeBackgroundColor()
   }
 
-  updateHeaderImageScale() {
-    if (!this.headerMedia) {
-      return
+  updateBackgroundColorFade() {
+    if (!this.caseMedia || !this.canvas || !this.projectColor) return
+
+    // Get the case header position
+    const caseHeader = this.elements.wrapper.querySelector('.case__header')
+    if (!caseHeader) return
+
+    const headerHeight = caseHeader.offsetHeight
+
+    // Start fading when the header is about to go off screen
+    // On mobile, account for smaller viewport
+    const triggerPoint = headerHeight - (window.innerHeight * 0.3)
+    const fadeDistance = 400
+
+    const fadeStartScroll = this.scroll.current - triggerPoint
+
+    let progress = 0
+
+    if (fadeStartScroll < 0) {
+      // Before fade starts - use project color
+      this.canvas.background.r = this.projectColor.r
+      this.canvas.background.g = this.projectColor.g
+      this.canvas.background.b = this.projectColor.b
+      progress = 0
+    } else if (fadeStartScroll > fadeDistance) {
+      // After fade completes - use white
+      this.canvas.background.r = this.whiteColor.r
+      this.canvas.background.g = this.whiteColor.g
+      this.canvas.background.b = this.whiteColor.b
+      progress = 1
+    } else {
+      // During fade - interpolate between project color and white
+      progress = fadeStartScroll / fadeDistance
+      this.canvas.background.r = this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress
+      this.canvas.background.g = this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress
+      this.canvas.background.b = this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress
     }
 
-    // Calculate scale based on scroll position - shrinks over first 800px for gradual visible effect
-    const scrollDistance = 800
-    const scrollProgress = Math.min(this.scroll.current / scrollDistance, 1)
-    const scale = this.initialScale - (scrollProgress * (this.initialScale - this.minScale))
+    // Apply same fade to navigation background
+    if (this.navBackground) {
+      const r = Math.round(this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress)
+      const g = Math.round(this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress)
+      const b = Math.round(this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress)
 
-    // Use GSAP ticker to force update and override any conflicting transforms
-    GSAP.ticker.lagSmoothing(0)
-    GSAP.set(this.headerMedia, {
-      x: '-50%',
-      y: '0%',
-      scale: scale,
-      force3D: true,
-      transformOrigin: 'center center'
-    })
+      this.navBackground.style.setProperty('--nav-bg-color', `rgb(${r}, ${g}, ${b})`)
+      this.navBackground.style.background = `rgb(${r}, ${g}, ${b})`
+    }
+
+    // Fade navigation text color from white to black as background fades to white
+    if (this.navLinks) {
+      // When progress is 0 (project color) = white text
+      // When progress is 1 (white background) = black text
+      const textR = Math.round(255 - (255 * progress))
+      const textG = Math.round(255 - (255 * progress))
+      const textB = Math.round(255 - (255 * progress))
+
+      this.navLinks.forEach(link => {
+        link.style.color = `rgb(${textR}, ${textG}, ${textB})`
+      })
+    }
   }
 
   /**
@@ -271,8 +307,8 @@ export default class extends Page {
     // Animate case title with GSAP
     this.animateCaseTitle()
 
-    // Setup header image scroll animation
-    this.setupHeaderImageScrollAnimation()
+    // Setup background color fade
+    this.setupBackgroundColorFade()
 
     return super.show()
   }
@@ -371,7 +407,7 @@ export default class extends Page {
 
   changeBackgroundColor (projectId) {
     if (!this.canvas) return
-    
+
     // Define project colors (same as Home page)
     const projectColors = {
       'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
@@ -386,11 +422,14 @@ export default class extends Page {
       'jack-daniels': { r: 128, g: 128, b: 128 }, // grey
       'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
     }
-    
+
     const targetColor = projectColors[projectId]
     if (targetColor) {
       console.log('Changing case page canvas background for project:', projectId, targetColor)
-      
+
+      // Store this as the project color for fade animation
+      this.projectColor = { ...targetColor }
+
       // Animate canvas background color
       GSAP.to(this.canvas.background, {
         r: targetColor.r,
@@ -401,8 +440,8 @@ export default class extends Page {
       })
 
       // Also animate navigation bar background to match
-      const navElement = document.querySelector('.navigation')
-      if (navElement) {
+      const navBackground = document.querySelector('.navigation__background')
+      if (navBackground) {
         const navBackgroundColors = {
           'sazy': 'rgb(220, 210, 200)',
           'ffmag': 'rgb(131, 113, 95)',
@@ -417,13 +456,10 @@ export default class extends Page {
           'inbound': 'rgb(253, 203, 71)',
           'default': 'rgb(248, 248, 248)'
         }
-        
+
         const targetNavColor = navBackgroundColors[projectId] || navBackgroundColors['default']
-        GSAP.to(navElement, {
-          '--nav-bg-color': targetNavColor,
-          duration: 0.5,
-          ease: 'power2.inOut'
-        })
+        navBackground.style.background = targetNavColor
+        navBackground.style.setProperty('--nav-bg-color', targetNavColor)
       }
     }
   }
@@ -490,8 +526,8 @@ export default class extends Page {
   update () {
     super.update()
 
-    // Update header image scale based on scroll
-    this.updateHeaderImageScale()
+    // Update background color fade based on scroll
+    this.updateBackgroundColorFade()
   }
 }
 
