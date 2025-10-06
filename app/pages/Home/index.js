@@ -14,7 +14,9 @@ export default class extends Page {
         list: '.home__list',
         items: '.home__item',
         overlayTop: '.home__overlay__row--top',
-        overlayBottom: '.home__overlay__row--bottom'
+        overlayBottom: '.home__overlay__row--bottom',
+        card: '.home__card',
+        canvasBackground: '.canvas__background'
       },
       isScrollable: true
     })
@@ -57,13 +59,18 @@ export default class extends Page {
   finishCoverTransition() {
     // Keep covered briefly, then reveal
     const tl = GSAP.timeline();
-    
+
     tl.to({}, { duration: 0.1 })
     .to([this.elements.overlayTop, this.elements.overlayBottom], {
       duration: 0.8,
       ease: 'power2.inOut',
       scaleY: 0
     })
+    .to(this.elements.card, {
+      clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
+      duration: 0.75,
+      ease: 'power2.inOut'
+    }, '-=0.3')
     .call(() => {
       this.hasTransitionPlayed = true;
     });
@@ -89,16 +96,14 @@ export default class extends Page {
     
     if (!isGoingToCasePage) {
       // Reset canvas background to default
-      if (this.canvas) {
-        GSAP.to(this.canvas.background, {
-          r: 248,
-          g: 248,
-          b: 248,
+      if (this.elements.canvasBackground) {
+        GSAP.to(this.elements.canvasBackground, {
+          backgroundColor: 'rgb(248, 248, 248)',
           duration: 0.5,
           ease: 'power2.inOut'
         })
       }
-      
+
       // Reset text colors to default
       this.setProjectTextColors('default', '#2c2c2c')
     }
@@ -286,27 +291,27 @@ export default class extends Page {
   }
 
   changeBackgroundColor (projectId) {
-    if (!this.canvas) return
-    
-    // Define project colors (RGB values for canvas)
+    if (!this.elements.canvasBackground) return
+
+    // Define project colors (hex values for CSS)
     const projectColors = {
-      'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
-      'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
-      'popeyes': { r: 147, g: 114, b: 132 }, // #937284
-      'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
-      'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
-      'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
-      'turning-tide': { r: 162, g: 138, b: 112 }, // #a28a70
-      'idris-elba': { r: 0, g: 0, b: 0 }, // black
-      'ocb': { r: 62, g: 90, b: 164 }, // #3e5aa4
-      'jack-daniels': { r: 128, g: 128, b: 128 }, // grey
-      'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
+      'sazy': '#dcd2c8', // much lighter brown
+      'ffmag': '#83715f',
+      'popeyes': '#937284',
+      'boxpark': '#fffd3c',
+      'spotify': '#eeeeee',
+      'stoli': '#ff0042',
+      'turning-tide': '#a28a70',
+      'idris-elba': '#000000', // black
+      'ocb': '#3e5aa4',
+      'jack-daniels': '#808080', // grey
+      'inbound': '#fdcb47'
     }
-    
+
     // Define text colors for each project
     const projectTextColors = {
       'sazy': '#F7F7F7',
-      'ffmag': '#D9CEC3', 
+      'ffmag': '#D9CEC3',
       'popeyes': '#FFE6E8', // much lighter pink for better contrast on red
       'boxpark': '#2C2C00', // dark olive for better contrast on yellow
       'spotify': '#B3A4A4',
@@ -317,16 +322,14 @@ export default class extends Page {
       'jack-daniels': '#ffffff', // fine as is
       'inbound': '#FFF4C4' // much lighter yellow for better contrast on yellow
     }
-    
+
     const targetColor = projectColors[projectId]
     if (targetColor) {
       console.log('Changing canvas background for project:', projectId, targetColor)
-      
+
       // Animate canvas background color with gradients and navigation updating in real-time
-      GSAP.to(this.canvas.background, {
-        r: targetColor.r,
-        g: targetColor.g,
-        b: targetColor.b,
+      GSAP.to(this.elements.canvasBackground, {
+        backgroundColor: targetColor,
         duration: 0.5,
         ease: 'power2.inOut',
         onUpdate: () => {
@@ -334,7 +337,7 @@ export default class extends Page {
           this.updateBackgroundGradients()
         }
       })
-      
+
       // Change text color to match the project
       this.setProjectTextColors(projectId, projectTextColors[projectId])
     }
@@ -386,11 +389,10 @@ export default class extends Page {
   }
 
   updateBackgroundGradients() {
-    if (!this.canvas) return
+    if (!this.elements.canvasBackground) return
 
-    // Get the current canvas background color
-    const currentBg = this.canvas.background
-    const bgColor = `rgb(${Math.round(currentBg.r)}, ${Math.round(currentBg.g)}, ${Math.round(currentBg.b)})`
+    // Get the current canvas background color from computed style
+    const bgColor = window.getComputedStyle(this.elements.canvasBackground).backgroundColor
 
     // Update the gradient backgrounds to match current color
     const topGradient = document.querySelector('.home__background__top')

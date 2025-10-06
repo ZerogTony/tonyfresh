@@ -1,16 +1,22 @@
 doctype html
-html(lang="en" style="background: #000;")
+html(lang="en")
   head
     include ./partials/head
 
   body
     include ./partials/navigation
-    
+
+    // Canvas background (solid color behind everything)
+    .canvas__background
+
     // Global overlay for page transitions
     .global-overlay
       .global-overlay__row.global-overlay__row--top
       .global-overlay__row.global-overlay__row--bottom
-   
+
+    // White card for home page (sits between canvas and home content)
+    .home__card
+
     include ./partials/intro
     include ./partials/home
     include ./partials/about

@@ -1,6 +1,7 @@
 .home {
   @extend %cover;
   @extend %page;
+  background: transparent;
   color: $color-pine-tree;
   transition: opacity 0s ease, visibility 0s ease;
 
@@ -72,6 +73,25 @@
 
   @include media {
     display: block;
+  }
+}
+
+.home__card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30%;
+  height: 60%;
+  background: white;
+  z-index: z('card'); // z-index 2: behind canvas (3) and content (4)
+  pointer-events: none;
+  opacity: 1;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); // Fully visible for now
+
+  @include media('<=phone') {
+    width: 75%;
+    height: 50%;
   }
 }
 

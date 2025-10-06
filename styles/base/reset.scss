@@ -1,5 +1,5 @@
 html {
-  background: $color-pine-tree;
+  background: transparent; // Use transparent - let canvas__background handle the color
   box-sizing: border-box;
   color: $color-iron;
   font-size: calc(100vw / 1920 * 10);
@@ -66,7 +66,7 @@ html {
 
 body {
   font-family:  $font-neue-montreal;
-  background: $color-pine-tree;
+  background: transparent;
   height: 100%;
   left: 0;
   opacity: 1;

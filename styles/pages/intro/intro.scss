@@ -1,9 +1,8 @@
 .intro {
     @extend %cover;
     @extend %page;
-    z-index: 10000;
+    z-index: 10000; // High z-index during intro, but will be hidden after
     overflow: visible;
-    transition: none !important;
     background-color: #0a0a0a;
 
     &--active {
@@ -41,6 +40,7 @@
   position: fixed;
   width: 100vw;
   height: 100vh;
+  transition: opacity 0.4s ease, visibility 0.4s ease; // Inherit parent transitions
 }
 
 .intro__preloader,
@@ -56,6 +56,17 @@
 
 .intro__split-overlay {
   z-index: 1;
+}
+
+// Hide intro children when intro is not active
+.intro:not(.intro--active) {
+  .intro__preloader,
+  .intro__split-overlay,
+  .intro__tags-overlay {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 // Title elements

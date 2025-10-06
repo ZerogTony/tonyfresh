@@ -47,5 +47,8 @@ vec4 fxaa(sampler2D tex, vec2 uv, vec2 resolution) {
 }
 
 void main() {
-  gl_FragColor = fxaa(tMap, vUv, uResolution);
+  vec4 color = fxaa(tMap, vUv, uResolution);
+  // Preserve alpha channel from original texture
+  vec4 original = texture2D(tMap, vUv);
+  gl_FragColor = vec4(color.rgb, original.a);
 }

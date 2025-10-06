@@ -222,16 +222,12 @@ export default class extends Page {
       this.timeline.kill();
     }
 
-    // Quick fade out
-    await new Promise(resolve => {
-      GSAP.to(this.element, {
-        opacity: 0,
-        duration: 0.3,
-        onComplete: resolve
-      });
-    });
-
+    // Remove active class to trigger CSS transition
     this.element.classList.remove(this.classes.active);
+
+    // Wait for CSS transition to complete
+    await new Promise(resolve => setTimeout(resolve, 400));
+
     return super.hide();
   }
 

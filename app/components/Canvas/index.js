@@ -19,7 +19,7 @@ export default class {
 
     this.url = url
 
-    this.renderer = new Renderer()
+    this.renderer = new Renderer({ alpha: true })
     this.gl = this.renderer.gl
 
     this.resolution = {
@@ -191,13 +191,8 @@ export default class {
    * Update.
    */
   update (scroll) {
-    // convert 0-255 range to 0-1 for WebGL clear color
-    this.gl.clearColor(
-      this.background.r / 255,
-      this.background.g / 255,
-      this.background.b / 255,
-      1
-    )
+    // Make canvas background transparent so we can see canvas__background div behind it
+    this.gl.clearColor(0, 0, 0, 0)
 
     if (this.medias) {
       each(this.medias, media => {
