@@ -1,128 +1,133 @@
 .intro {
     @extend %cover;
     @extend %page;
-   z-index: 10000;
+    z-index: 10000;
     overflow: visible;
-    // Remove transitions to prevent fade-in/out effects
     transition: none !important;
-    background-color: rgb(17, 17, 17);
-  
+    background-color: #0a0a0a;
+
     &--active {
         @extend %page--active;
-        
     }
-    
-    &--loading {
-      .intro__content {
-        opacity: 0;
-        pointer-events: none;
+
+    h1 {
+      text-transform: uppercase;
+      font-size: 6rem;
+      font-weight: 600;
+      line-height: 1;
+
+      @include media('<=1000px') {
+        font-size: 2.5rem;
       }
     }
 
-     // &:after {
-  //   background: #f0f;
-  //   content: '';
-  //   height: 100%;
-  //   left: 50%;
-  //   position: absolute;
-  //   transform: translateX(-50%);
-  //   width: 1.5rem;
-  // }
-  }
+    p {
+      text-transform: uppercase;
+      font-size: 13px;
+      font-weight: 500;
+    }
 
-.intro__loader {
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+}
+
+// Preloader and split overlay base styles
+.intro__preloader,
+.intro__split-overlay,
+.intro__tags-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: $color-iron;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10001;
-  opacity: 1;
-  
-  &--hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-}
-
-.intro__loader__percentage {
-  font-family: $font-neue-montreal;
-  font-size: 4rem;
-  color: $color-pine-tree;
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  
-  @include media('<=phone') {
-    font-size: 2.5rem;
-  }
-}
-
-.intro__overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10002; /* Above loader */
-}
-
-.intro__overlay__row {
-  position: absolute;
-  width: 100%;
-  height: 50%;
-  background-color: rgb(17, 17, 17);
-  transform: scaleY(0); /* Start hidden, reveal loader immediately */
-  transform-origin: center;
-
-  &--top {
-    top: 0;
-    transform-origin: top center;
-  }
-
-  &--bottom {
-    bottom: 0;
-    transform-origin: bottom center;
-  }
-}
-
-.intro__content {
-  @extend %content;
-  position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  pointer-events: none;
+}
+
+.intro__preloader,
+.intro__split-overlay {
+  background-color: #0a0a0a;
+  color: #fff;
+}
+
+.intro__preloader,
+.intro__tags-overlay {
+  z-index: 2;
+}
+
+.intro__split-overlay {
+  z-index: 1;
+}
+
+// Title elements
+.intro__intro-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
   text-align: center;
-  overflow: visible;
+}
 
-  @include media('<=phone') {
-    padding: 1rem 1rem;
-  }
+.intro__outro-title {
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 10rem);
+  transform: translate(-50%, -50%);
 
-  @include media('<=320px') {
-    padding: 0.5rem 0.5rem;
+  @include media('<=1000px') {
+    left: calc(50% + 4rem);
   }
 }
 
-.intro__wrapper {
+// Tags
+.intro__tag {
+  position: absolute;
+  width: max-content;
+  color: #5a5a5a;
+  overflow: hidden;
+}
+
+.intro__tag-1 {
+  top: 15%;
+  left: 15%;
+}
+
+.intro__tag-2 {
+  bottom: 15%;
+  left: 25%;
+}
+
+.intro__tag-3 {
+  bottom: 30%;
+  right: 15%;
+}
+
+// Text animation classes
+.intro__intro-title .char,
+.intro__outro-title .char {
   position: relative;
-  width: 90vw;
-  height: 100%;
-  margin: 0 auto;
+  display: inline-block;
+  overflow: hidden;
+}
 
-  @include media('<=900px') {
-    width: 98vw;
-  }
+.intro__intro-title .char,
+.intro__outro-title .char {
+  margin-top: 0.75rem;
 
-  @include media('<=phone') {
-    width: 100%;
+  @include media('<=1000px') {
+    margin-top: 0.5rem;
   }
+}
 
-  @include media('<=320px') {
-    width: 100%;
-  }
+.intro__intro-title .char span,
+.intro__outro-title .char span,
+.intro__tag .word {
+  position: relative;
+  display: inline-block;
+  transform: translateY(-100%);
+  will-change: transform;
+}
+
+.intro__intro-title .first-char {
+  transform-origin: top left;
 }

@@ -149,6 +149,15 @@ class App {
 
   createIntro () {
     this.intro = new Intro()
+
+    // Set up callback for when intro animation completes
+    this.intro.onAnimationComplete = () => {
+      // Navigate to home page when the split animation completes
+      this.onChange({
+        url: '/home',
+        push: true
+      })
+    }
   }
 
   createAbout () {
@@ -183,43 +192,22 @@ class App {
       this.canvas.onChange(this.url)
     }
 
-    // Special letterbox transition when going FROM intro TO homepage
+    // Special intro-to-home transition (no global overlay needed - intro animation handles the split)
     if (previousUrl === '/' && this.url === '/home') {
-      // First, reverse all intro animations (intro handles this in its hide method)
-      await this.page.hide(this.url)
-      
-      // Use global overlay for the letterbox transition (stays available between pages)
-      if (this.globalOverlay.overlayTop && this.globalOverlay.overlayBottom) {
-        // Set letterbox to cover screen (dark grey screen)
-        GSAP.set([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], { scaleY: 1 })
-        
-        // Update navigation and set new page behind the letterbox
-        if (push) {
-          window.history.pushState({}, document.title, url)
-        }
-        this.navigation.onChange(this.url)
-        this.page = this.pages[this.url]
-        
-        // Show homepage behind the letterbox
-        await this.page.show(this.url)
-        
-        // Then animate letterbox away to reveal homepage
-        GSAP.to([this.globalOverlay.overlayTop, this.globalOverlay.overlayBottom], {
-          scaleY: 0,
-          duration: 0.8,
-          ease: 'power2.inOut',
-          delay: 0.2
-        })
-      } else {
-        console.error('Global overlay elements not found for transition')
-        // Fallback without letterbox
-        if (push) {
-          window.history.pushState({}, document.title, url)
-        }
-        this.navigation.onChange(this.url)
-        this.page = this.pages[this.url]
-        await this.page.show(this.url)
+      // Don't hide intro - it stays visible during the split
+      // Just update the URL and switch pages
+      if (push) {
+        window.history.pushState({}, document.title, url)
       }
+
+      this.navigation.onChange(this.url)
+      this.page = this.pages[this.url]
+
+      // Show homepage - it will be revealed by the intro split animation
+      await this.page.show(this.url)
+
+      // After home page is shown, hide the intro (the split layers are already off-screen)
+      await this.intro.hide(this.url)
     } else {
       // Normal transition for other pages
       await this.page.hide(this.url)

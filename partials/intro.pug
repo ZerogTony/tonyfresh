@@ -1,24 +1,23 @@
 section.intro
-  .intro__loader
-    .intro__loader__percentage 0%
-  .intro__overlay
-    .intro__overlay__row.intro__overlay__row--top
-    .intro__overlay__row.intro__overlay__row--bottom
-  .intro__content
-    .intro__wrapper
-      header.intro__header
-        h1.intro__header__title
-          .intro__header__title__center
-            .intro__header__title__overlap-container
-              .intro__header__title__text.intro__header__title__center-text
-                span DIGITAL#{'\n'}DESIGN
-              .intro__header__title__text.intro__header__title__overlay
-                span Tim#{'\n'}Andrews
-              .intro__header__title__text.intro__header__title__overlay-right
-                span Portfolio 25
+  // Preloader - top layer with dark background
+  .intro__preloader
+    .intro__intro-title
+      h1 Tusiime Andrews
+    .intro__outro-title
+      h1 Design
 
-      .intro__image
-        .intro__image__inner
+  // Split overlay - bottom half of split animation
+  .intro__split-overlay
+    .intro__intro-title
+      h1 Tusiime Andrews
+    .intro__outro-title
+      h1 Design
 
-      .intro__enter
-        a.navigation__link(href="/home") Selected Works
+  // Tags overlay - floating tags
+  .intro__tags-overlay
+    .intro__tag.intro__tag-1
+      p Negative Space
+    .intro__tag.intro__tag-2
+      p Form & Void
+    .intro__tag.intro__tag-3
+      p Light Studies
