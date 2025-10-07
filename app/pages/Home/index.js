@@ -2,6 +2,7 @@ import Page from 'components/Page'
 import Scrolling from 'components/Scrolling'
 import GSAP from 'gsap'
 import { delay } from 'utils/math'
+import SplitType from 'split-type'
 
 export default class extends Page {
   constructor (canvas) {
@@ -36,6 +37,18 @@ export default class extends Page {
       GSAP.to(card, {
         opacity: 1,
         duration: 0.4,
+        ease: 'power2.inOut'
+      })
+    }
+
+    // Fade in feathered borders with delay
+    const featherTop = document.querySelector('.home__background__top')
+    const featherBottom = document.querySelector('.home__background__bottom')
+    if (featherTop && featherBottom) {
+      GSAP.to([featherTop, featherBottom], {
+        opacity: 1,
+        duration: 0.6,
+        delay: 0.8,
         ease: 'power2.inOut'
       })
     }
@@ -80,6 +93,17 @@ export default class extends Page {
   async hide (nextUrl) {
     // Dispatch event to lock hover animations
     window.dispatchEvent(new CustomEvent('homeTransitionStart'))
+
+    // Fade out feathered borders immediately (no delay)
+    const featherTop = document.querySelector('.home__background__top')
+    const featherBottom = document.querySelector('.home__background__bottom')
+    if (featherTop && featherBottom) {
+      GSAP.to([featherTop, featherBottom], {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.inOut'
+      })
+    }
 
     // Fade out white card
     const card = document.querySelector('.home__card')
@@ -131,6 +155,7 @@ export default class extends Page {
     super.create()
 
     this.createList()
+    this.splitTextElements()
     this.createIntersectionObserver()
     this.setupInitialProjectStates()
   }
@@ -145,19 +170,39 @@ export default class extends Page {
     })
   }
 
+  splitTextElements () {
+    // Split all project titles into characters
+    const titles = document.querySelectorAll('.home__link__title')
+
+    titles.forEach((title) => {
+      const split = new SplitType(title, {
+        types: 'chars',
+        tagName: 'span'
+      })
+
+      if (split.chars) {
+        split.chars.forEach((char) => {
+          const originalText = char.textContent
+          char.innerHTML = `<span>${originalText}</span>`
+        })
+      }
+    })
+  }
+
   createIntersectionObserver () {
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
+        const projectId = entry.target.dataset.projectId || entry.target.querySelector('.home__link').href.split('/').pop()
+
         if (entry.isIntersecting) {
-          const projectId = entry.target.dataset.projectId || entry.target.querySelector('.home__link').href.split('/').pop()
-          
           // Change background color based on visible project
           this.changeBackgroundColor(projectId)
-          
-          if (!this.animatedProjects.has(projectId)) {
-            this.animateProjectIn(entry.target)
-            this.animatedProjects.add(projectId)
-          }
+
+          // Always animate in when entering viewport
+          this.animateProjectIn(entry.target)
+        } else {
+          // Animate out when leaving viewport
+          this.animateProjectOut(entry.target, false)
         }
       })
     }, {
@@ -175,14 +220,21 @@ export default class extends Page {
   setupInitialProjectStates () {
     // Set all projects to initial hidden state
     this.elements.items.forEach(project => {
-      const textElements = project.querySelectorAll('.home__link__number, .home__link__title, .home__link__description')
       const numberElements = project.querySelectorAll('.home__link__number')
-      
-      GSAP.set(textElements, {
+      const descriptionElements = project.querySelectorAll('.home__link__description')
+      const titleChars = project.querySelectorAll('.home__link__title .char span')
+
+      // Set number and description to hidden
+      GSAP.set([numberElements, descriptionElements], {
         y: '100%',
         opacity: 0
       })
-      
+
+      // Set title characters to hidden
+      GSAP.set(titleChars, {
+        y: '100%'
+      })
+
       numberElements.forEach(number => {
         GSAP.set(number, {
           '--underline-scale': 0
@@ -192,33 +244,60 @@ export default class extends Page {
   }
 
   animateProjectIn (project) {
-    const textElements = project.querySelectorAll('.home__link__number, .home__link__title, .home__link__description')
     const numberElements = project.querySelectorAll('.home__link__number')
-    
-    if (textElements.length > 0) {
-      GSAP.fromTo(textElements, {
-        y: '100%',
-        opacity: 0
+    const descriptionElements = project.querySelectorAll('.home__link__description')
+    const titleChars = project.querySelectorAll('.home__link__title .char span')
+
+    // Animate number in first
+    GSAP.fromTo(numberElements, {
+      y: '100%',
+      opacity: 0
+    }, {
+      y: '0%',
+      opacity: 1,
+      duration: 0.8,
+      ease: 'expo.out',
+      force3D: true,
+      transformOrigin: 'center center'
+    })
+
+    // Animate title characters with stagger (like Nullspace)
+    if (titleChars.length > 0) {
+      GSAP.fromTo(titleChars, {
+        y: '100%'
       }, {
         y: '0%',
-        opacity: 1,
-        duration: 0.8,
+        duration: 0.75,
         ease: 'expo.out',
-        stagger: 0.04, // Only stagger within this project's 3 elements
-        force3D: true,
-        transformOrigin: 'center center'
-      })
-      
-      // Animate underlines in
-      numberElements.forEach(number => {
-        GSAP.to(number, {
-          '--underline-scale': 1,
-          duration: 0.3,
-          delay: 0.05,
-          ease: 'power2.out'
-        })
+        stagger: 0.05,
+        delay: 0.04,
+        force3D: true
       })
     }
+
+    // Animate description last
+    GSAP.fromTo(descriptionElements, {
+      y: '100%',
+      opacity: 0
+    }, {
+      y: '0%',
+      opacity: 1,
+      duration: 0.8,
+      ease: 'expo.out',
+      delay: 0.08,
+      force3D: true,
+      transformOrigin: 'center center'
+    })
+
+    // Animate underlines in
+    numberElements.forEach(number => {
+      GSAP.to(number, {
+        '--underline-scale': 1,
+        duration: 0.3,
+        delay: 0.05,
+        ease: 'power2.out'
+      })
+    })
   }
 
   animateVisibleProjects () {
@@ -274,9 +353,10 @@ export default class extends Page {
   }
 
   animateProjectOut (project, immediate = false) {
-    const textElements = project.querySelectorAll('.home__link__number, .home__link__title, .home__link__description')
     const numberElements = project.querySelectorAll('.home__link__number')
-    
+    const descriptionElements = project.querySelectorAll('.home__link__description')
+    const titleChars = project.querySelectorAll('.home__link__title .char span')
+
     // Animate underlines out
     numberElements.forEach(number => {
       GSAP.to(number, {
@@ -285,16 +365,26 @@ export default class extends Page {
         ease: immediate ? 'power2.out' : 'expo.in'
       })
     })
-    
-    if (textElements.length > 0) {
-      GSAP.to(textElements, {
+
+    // Animate number and description out
+    GSAP.to([numberElements, descriptionElements], {
+      y: '100%',
+      opacity: 0,
+      duration: immediate ? 0.4 : 0.5,
+      ease: immediate ? 'power2.in' : 'expo.in',
+      stagger: immediate ? 0.02 : 0.03,
+      force3D: true,
+      transformOrigin: 'center center'
+    })
+
+    // Animate title characters out with stagger
+    if (titleChars.length > 0) {
+      GSAP.to(titleChars, {
         y: '100%',
-        opacity: 0,
         duration: immediate ? 0.4 : 0.5,
         ease: immediate ? 'power2.in' : 'expo.in',
-        stagger: immediate ? 0.02 : 0.03,
-        force3D: true,
-        transformOrigin: 'center center'
+        stagger: immediate ? 0.01 : 0.02,
+        force3D: true
       })
     }
   }

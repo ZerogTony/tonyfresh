@@ -43,13 +43,12 @@
 .home__background {
   @extend %cover;
   color: rgb(0, 0, 0);
-  display: none;
+  display: block;
   pointer-events: none;
-  z-index: 2; /* Just below navigation (3) but still visible */
+  z-index: 10; /* Above home items so gradients layer on top */
 
   &__top,
   &__bottom {
-    background: rgb(0, 0, 0);
     content: '';
     display: block;
     height: 10rem;
@@ -57,23 +56,26 @@
     width: 30%; // Match card width
     left: 50%;
     transform: translateX(-50%);
+    opacity: 0;
   }
 
   &__top {
-    background: linear-gradient(to bottom, orange 0%, transparent 100%);
+    background: linear-gradient(to bottom, white 0%, transparent 100%);
     top: calc(50vh - 30vh); // Top edge of card
 
     @include media('<=phone') {
       width: 75%;
+      height: 7rem;
     }
   }
 
   &__bottom {
-    background: linear-gradient(to bottom, transparent 0%, orange 100%);
+    background: linear-gradient(to bottom, transparent 0%, white 100%);
     top: calc(50vh + 30vh - 10rem); // Bottom edge of card minus gradient height
 
     @include media('<=phone') {
       width: 75%;
+      height: 7rem;
     }
   }
 }
@@ -175,7 +177,7 @@ body:has(.about--active) .home__card__beam--bottom {
 
   &:hover {
     .home__link__title {
-      font-variation-settings: "wght" 800;
+      font-weight: 800;
       letter-spacing: 0.12em;
     }
   }
@@ -224,14 +226,14 @@ body:has(.about--active) .home__card__beam--bottom {
 
   .home__link__title {
     display: block;
-    font-family: 'Delight Variable', serif;
+    font-family: "DM Sans", sans-serif;
     font-size: 4rem;
     font-weight: 600;
-    line-height: 1.1;
+    line-height: 1;
     margin-bottom: 1rem;
-    letter-spacing: -0.02em;
-    font-variation-settings: "wght" 600;
-    transition: font-variation-settings 0.4s ease-out, letter-spacing 0.6s ease-out;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    transition: font-weight 0.4s ease-out, letter-spacing 0.6s ease-out;
     transform-origin: center center;
     cursor: pointer;
     will-change: transform, opacity;
@@ -248,6 +250,20 @@ body:has(.about--active) .home__card__beam--bottom {
 
     @include media('<=320px') {
       font-size: 2.5rem;
+    }
+
+    // Character wrapper styles (from SplitType)
+    .char {
+      position: relative;
+      display: inline-block;
+      overflow: hidden;
+    }
+
+    .char span {
+      position: relative;
+      display: inline-block;
+      transform: translateY(100%);
+      will-change: transform;
     }
   }
 
@@ -290,7 +306,7 @@ body:has(.about--active) .home__card__beam--bottom {
   align-items: center;
   justify-content: space-between;
   padding: 0 10vw;
-  gap: 5rem;
+  gap: 3rem;
 
   @include media('<=phone') {
     flex-direction: column;
