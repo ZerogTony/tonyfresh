@@ -53,26 +53,28 @@
     content: '';
     display: block;
     height: 10rem;
-    position: absolute;
-    width: 100%;
+    position: fixed;
+    width: 30%; // Match card width
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   &__top {
-    background: linear-gradient(to bottom, rgb(248, 248, 248) 0%, transparent 100%);
-    top: 5rem; /* Start just below the navigation bar background */
+    background: linear-gradient(to bottom, orange 0%, transparent 100%);
+    top: calc(50vh - 30vh); // Top edge of card
 
     @include media('<=phone') {
-      top: 5rem; /* Start just below the navigation bar background on mobile */
+      width: 75%;
     }
   }
 
   &__bottom {
-    background: linear-gradient(to bottom, transparent 0%, rgb(248, 248, 248) 100%);
-    bottom: 0;
-  }
+    background: linear-gradient(to bottom, transparent 0%, orange 100%);
+    top: calc(50vh + 30vh - 10rem); // Bottom edge of card minus gradient height
 
-  @include media {
-    display: block;
+    @include media('<=phone') {
+      width: 75%;
+    }
   }
 }
 
@@ -87,12 +89,45 @@
   z-index: z('card'); // z-index 2: behind canvas (3) and content (4)
   pointer-events: none;
   opacity: 1;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); // Fully visible for now
+  overflow: hidden;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); // Default visible
 
   @include media('<=phone') {
     width: 75%;
     height: 50%;
   }
+}
+
+.home__card__beam--top,
+.home__card__beam--bottom {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  background: orange;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease 1s, visibility 0.4s ease 1s;
+}
+
+.home__card__beam--top {
+  top: 0;
+  height: calc(50vh - 30vh); // From top to top of card (20vh)
+}
+
+.home__card__beam--bottom {
+  top: calc(50vh + 30vh); // From bottom of card (80vh)
+  height: calc(50vh - 30vh); // To bottom (20vh)
+}
+
+// Hide beams when case or about page is active (immediate, no delay)
+body:has(.case--active) .home__card__beam--top,
+body:has(.case--active) .home__card__beam--bottom,
+body:has(.about--active) .home__card__beam--top,
+body:has(.about--active) .home__card__beam--bottom {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .home__wrapper {
@@ -132,9 +167,11 @@
 .home__link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
   padding: 0 10vw;
-  gap: 5rem;
+  gap: 0.5rem;
 
   &:hover {
     .home__link__title {
@@ -144,10 +181,6 @@
   }
 
   @include media('<=phone') {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
     padding: 0 2rem;
   }
 }
@@ -160,12 +193,12 @@
 
   .home__link__number {
     display: block;
-    font-size: 5rem;
+    font-size: 2rem;
     font-weight: 400;
     line-height: 1;
     opacity: 0.5;
     margin-top: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     position: relative;
     will-change: transform, opacity;
     transform-style: preserve-3d;
@@ -173,7 +206,7 @@
     --underline-scale: 1;
 
     @include media('<=900px') {
-      font-size: 4rem;
+      font-size: 1.8rem;
     }
 
     @include media('<=phone') {
@@ -185,38 +218,28 @@
     }
     
     &::after {
-      content: '';
-      position: absolute;
-      bottom: -0.8rem;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: currentColor;
-      opacity: 0.3;
-      transform: scaleX(var(--underline-scale));
-      transform-origin: right center;
-      transition: transform 0.15s ease;
+      display: none;
     }
   }
 
   .home__link__title {
     display: block;
     font-family: 'Delight Variable', serif;
-    font-size: 9rem;
+    font-size: 4rem;
     font-weight: 600;
     line-height: 1.1;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     letter-spacing: -0.02em;
     font-variation-settings: "wght" 600;
     transition: font-variation-settings 0.4s ease-out, letter-spacing 0.6s ease-out;
-    transform-origin: left center;
+    transform-origin: center center;
     cursor: pointer;
     will-change: transform, opacity;
     transform-style: preserve-3d;
     backface-visibility: hidden;
 
     @include media('<=900px') {
-      font-size: 6rem;
+      font-size: 3.5rem;
     }
 
     @include media('<=phone') {
@@ -230,18 +253,21 @@
 
   .home__link__description {
     display: block;
-    font-size: 3rem;
+    font-size: 1.4rem;
     font-weight: 300;
     opacity: 0.7;
     line-height: 1.4;
-    max-width: 50rem;
-    margin-bottom: 1rem;
+    max-width: 35rem;
+    margin-bottom: 0.5rem;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
     will-change: transform, opacity;
     transform-style: preserve-3d;
     backface-visibility: hidden;
 
     @include media('<=900px') {
-      font-size: 2.5rem;
+      font-size: 1.3rem;
     }
 
     @include media('<=phone') {
@@ -278,22 +304,22 @@
 .home__link__media {
   background: $color-pine-tree;
   flex-shrink: 0;
-  height: 50.3rem;
-  width: 68.3rem;
+  height: 30rem;
+  width: 40rem;
   overflow: hidden;
   object-fit: cover;
   opacity: 0;
   position: static;
-  transform-origin: center center; // ✅ ensure it's growing from the centre
+  transform-origin: center center;
 
   &[data-direction="left"] {
     order: 2;
-    margin-left: 4rem;
+    margin-left: 0;
   }
 
   &[data-direction="right"] {
     order: 1;
-    margin-right: 4rem;
+    margin-right: 0;
   }
 
   @include media('<=phone') {

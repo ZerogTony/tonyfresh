@@ -15,7 +15,6 @@ export default class extends Page {
         items: '.home__item',
         overlayTop: '.home__overlay__row--top',
         overlayBottom: '.home__overlay__row--bottom',
-        card: '.home__card',
         canvasBackground: '.canvas__background'
       },
       isScrollable: true
@@ -31,20 +30,25 @@ export default class extends Page {
     this.list.enable()
     this.element.classList.add(this.classes.active)
 
+    // Fade in white card
+    const card = document.querySelector('.home__card')
+    if (card) {
+      GSAP.to(card, {
+        opacity: 1,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      })
+    }
+
     // Reset animation tracking when returning to home
     this.animatedProjects.clear()
-    
+
     // Re-setup initial states for all projects
     this.setupInitialProjectStates()
 
-    // Check if transitioning from intro page
-    if (url === '/home' && !this.hasTransitionPlayed) {
-      this.finishCoverTransition()
-    }
-
     // Animate any currently visible projects immediately, then setup observer for the rest
     this.animateVisibleProjects()
-    
+
     // Reconnect intersection observer after a brief delay to ensure proper triggering
     this.reconnectObserver()
 
@@ -66,11 +70,6 @@ export default class extends Page {
       ease: 'power2.inOut',
       scaleY: 0
     })
-    .to(this.elements.card, {
-      clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
-      duration: 0.75,
-      ease: 'power2.inOut'
-    }, '-=0.3')
     .call(() => {
       this.hasTransitionPlayed = true;
     });
@@ -81,10 +80,20 @@ export default class extends Page {
   async hide (nextUrl) {
     // Dispatch event to lock hover animations
     window.dispatchEvent(new CustomEvent('homeTransitionStart'))
-    
+
+    // Fade out white card
+    const card = document.querySelector('.home__card')
+    if (card) {
+      GSAP.to(card, {
+        opacity: 0,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      })
+    }
+
     // Animate text elements out with slide-up
     this.animateTextOutImmediate()
-    
+
     // Wait for animation to complete before hiding
     await delay(400)
     
