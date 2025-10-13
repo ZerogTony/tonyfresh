@@ -5,7 +5,9 @@ mixin template(id, title, direction, number, description)
         alt=`${title} Project Preview`,
         data-direction=direction,
         data-src=`/projects/${id}.jpg`,
-        data-src-webp=`/projects/${id}.webp`
+        data-src-webp=`/projects/${id}.webp`,
+        loading="lazy",
+        decoding="async"
       )
       span.home__link__wrapper
         span.home__link__number= number

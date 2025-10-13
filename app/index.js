@@ -9,6 +9,7 @@ import GSAP from 'gsap'
 import each from 'lodash/each'
 
 import Detection from 'classes/Detection'
+import LazyLoad from 'utils/lazyLoad'
 
 import Intro from 'pages/Intro'
 import About from 'pages/About'
@@ -33,17 +34,24 @@ class App {
       y: window.innerHeight / 2
     }
 
+    // Track visibility and animation state
+    this.isPageVisible = true
+    this.isAnimating = false
+    this.lastScrollPosition = 0
+    this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
     AutoBind(this)
 
-  
+
       this.createCanvas()
-    
+
     this.createGlobalOverlay()
     this.createNavigation()
     this.createCase()
     this.createHome()
     this.createAbout()
     this.createIntro()
+    this.createLazyLoad()
 
     this.pages = {
 
@@ -66,9 +74,14 @@ class App {
     this.addLinksEventsListeners()
 
     this.onResize()
-    
+
     // Start the update loop immediately
     this.onInteract()
+  }
+
+  createLazyLoad () {
+    this.lazyLoad = new LazyLoad()
+    this.lazyLoad.init()
   }
 
   createCanvas () {
@@ -227,6 +240,11 @@ class App {
       await this.page.show(this.url)
     }
 
+    // Update lazy load for new page content
+    if (this.lazyLoad) {
+      this.lazyLoad.update()
+    }
+
     this.isFetching = false
   }
 
@@ -234,23 +252,35 @@ class App {
    * Loop.
    */
   update () {
+    // Pause rendering when page is hidden
+    if (!this.isPageVisible) {
+      this.animationFrame = window.requestAnimationFrame(this.update)
+      return
+    }
+
     if (this.stats) {
       this.stats.begin()
     }
+
+    // Check if scroll position changed (for conditional canvas updates)
+    const currentScroll = this.case.scroll ? this.case.scroll.current : 0
+    const scrollChanged = Math.abs(currentScroll - this.lastScrollPosition) > 0.1
 
     if (this.page) {
       this.page.update()
     }
 
-    if (this.canvas && this.canvas.update) {
-      this.canvas.update(this.case.scroll ? this.case.scroll.current : 0)
+    // Only update canvas if scroll changed or animations are running
+    if (this.canvas && this.canvas.update && (scrollChanged || this.isAnimating || Detection.isMobile() === false)) {
+      this.canvas.update(currentScroll)
+      this.lastScrollPosition = currentScroll
     }
 
     if (this.stats) {
       this.stats.end()
     }
 
-    window.requestAnimationFrame(this.update)
+    this.animationFrame = window.requestAnimationFrame(this.update)
   }
 
   /**
@@ -352,6 +382,18 @@ class App {
     this.update()
   }
 
+  onVisibilityChange () {
+    this.isPageVisible = !document.hidden
+
+    if (!this.isPageVisible) {
+      // Page is hidden, pause expensive operations
+      console.log('Page hidden, pausing rendering')
+    } else {
+      // Page is visible again, resume
+      console.log('Page visible, resuming rendering')
+    }
+  }
+
   /**
    * Listeners.
    */
@@ -372,6 +414,9 @@ class App {
 
     window.addEventListener('mousewheel', this.onWheel, { passive: true })
     window.addEventListener('wheel', this.onWheel, { passive: true })
+
+    // Page Visibility API for pausing when hidden
+    document.addEventListener('visibilitychange', this.onVisibilityChange, { passive: true })
 
     window.oncontextmenu = this.onContextMenu
   }

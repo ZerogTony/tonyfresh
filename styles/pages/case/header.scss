@@ -33,9 +33,11 @@
 }
 
 .case__title {
-  font: 23rem/0.8 $font-ampersand;
+  font-family: "DM Sans", sans-serif;
+  font-size: 23rem;
   font-weight: 900;
-  line-height: 1.4;
+  line-height: 1;
+  text-transform: uppercase;
   padding: 0 2rem;
   margin-top: 8rem;
   margin-bottom: 5rem;
@@ -45,17 +47,23 @@
 
   @include media('<=phone') {
     font-size: 5rem;
-    line-height: 1.2;
+    line-height: 1;
     white-space: inherit;
     margin-bottom: 3rem;
+  }
+
+  .char {
+    overflow: hidden;
+  }
+
+  .char span {
+    transform: translateY(100%);
   }
 }
 
 .case__title__text {
   display: block;
-  transform: translateY(200%);
   will-change: transform;
-  overflow: hidden;
 }
 
 

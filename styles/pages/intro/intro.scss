@@ -1,7 +1,7 @@
 .intro {
     @extend %cover;
     @extend %page;
-    z-index: 10000; // High z-index during intro, but will be hidden after
+    z-index: 30000; // Above navigation (20000) during intro
     overflow: visible;
     background-color: #0a0a0a;
 
@@ -79,14 +79,25 @@
   text-align: center;
 }
 
-.intro__outro-title {
+.intro__second-title {
   position: absolute;
   top: 50%;
-  left: calc(50% + 10rem);
+  left: calc(50% - 15rem);
   transform: translate(-50%, -50%);
 
   @include media('<=1000px') {
-    left: calc(50% + 4rem);
+    left: calc(50% - 6rem);
+  }
+}
+
+.intro__outro-title {
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 15rem);
+  transform: translate(-50%, -50%);
+
+  @include media('<=1000px') {
+    left: calc(50% + 6rem);
   }
 }
 
@@ -115,6 +126,7 @@
 
 // Text animation classes
 .intro__intro-title .char,
+.intro__second-title .char,
 .intro__outro-title .char {
   position: relative;
   display: inline-block;
@@ -122,6 +134,7 @@
 }
 
 .intro__intro-title .char,
+.intro__second-title .char,
 .intro__outro-title .char {
   margin-top: 0.75rem;
 
@@ -131,6 +144,7 @@
 }
 
 .intro__intro-title .char span,
+.intro__second-title .char span,
 .intro__outro-title .char span,
 .intro__tag .word {
   position: relative;

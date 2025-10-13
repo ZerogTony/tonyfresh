@@ -79,6 +79,38 @@ console.log("Current media ID:", this.id);
 destroy() {
   window.removeEventListener('mediaOpened', this.onOtherMediaOpened);
   window.removeEventListener('homeTransitionStart', this.onHomeTransitionStart);
+
+  // Clean up event listeners
+  if (Detection.isMobile()) {
+    this.homeLink.removeEventListener('touchstart', this.onMouseOver)
+    window.removeEventListener('touchend', this.onMouseLeave)
+  } else {
+    this.homeLink.removeEventListener('mouseover', this.onMouseOver)
+    this.homeLink.removeEventListener('mouseout', this.onMouseLeave)
+  }
+
+  // Dispose WebGL resources
+  if (this.plane) {
+    if (this.plane.program && this.plane.program.uniforms && this.plane.program.uniforms.tMap) {
+      const texture = this.plane.program.uniforms.tMap.value
+      if (texture && texture.gl) {
+        texture.gl.deleteTexture(texture.texture)
+      }
+    }
+
+    // Remove from scene
+    if (this.plane.parent) {
+      this.plane.setParent(null)
+    }
+
+    this.plane = null
+  }
+
+  // Kill GSAP timeline
+  if (this.animation) {
+    this.animation.kill()
+    this.animation = null
+  }
 }
 
 onHomeTransitionStart() {
@@ -227,8 +259,10 @@ createMesh() {
     this.updateAlpha()
     this.updateVisibility()
 
+    // Reduce shader animation frequency on mobile
     if (this.alpha.current > 0) {
-      this.plane.program.uniforms.uTime.value += (this.direction === 'left' ? 0.07: -0.07)
+      const timeIncrement = Detection.isMobile() ? 0.05 : 0.07
+      this.plane.program.uniforms.uTime.value += (this.direction === 'left' ? timeIncrement : -timeIncrement)
     }
   }
 

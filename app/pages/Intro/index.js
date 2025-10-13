@@ -52,6 +52,7 @@ export default class extends Page {
 
     // Split all text elements
     this.splitTextElements(".intro__intro-title h1", "words,chars", true);
+    this.splitTextElements(".intro__second-title h1", "words,chars");
     this.splitTextElements(".intro__outro-title h1");
     this.splitTextElements(".intro__tag p", "words");
 
@@ -107,7 +108,7 @@ export default class extends Page {
         0.5
       )
       .to(
-        ".intro__preloader .intro__intro-title .char:not(.first-char) span",
+        ".intro__preloader .intro__intro-title .char span",
         {
           y: "100%",
           duration: 0.75,
@@ -116,45 +117,55 @@ export default class extends Page {
         2
       )
       .to(
+        ".intro__preloader .intro__second-title .char span",
+        {
+          y: "0%",
+          duration: 0.75,
+          stagger: 0.05,
+        },
+        2.5
+      )
+      // Digital and Design reveal simultaneously with stagger
+      .to(
+        ".intro__preloader .intro__second-title .char span",
+        {
+          y: "0%",
+          duration: 0.75,
+          stagger: 0.05,
+        },
+        3.5
+      )
+      .to(
         ".intro__preloader .intro__outro-title .char span",
         {
           y: "0%",
           duration: 0.75,
           stagger: 0.075,
         },
-        2.5
-      )
-      .to(
-        ".intro__preloader .intro__intro-title .first-char",
-        {
-          x: isMobile ? "9rem" : "21.25rem",
-          duration: 1,
-        },
         3.5
       )
+      // Digital staggers out
       .to(
-        ".intro__preloader .intro__outro-title .char",
+        ".intro__preloader .intro__second-title .char span",
         {
-          x: isMobile ? "-3rem" : "-8rem",
-          duration: 1,
-        },
-        3.5
-      )
-      .to(
-        ".intro__preloader .intro__intro-title .first-char",
-        {
-          x: isMobile ? "7.5rem" : "18rem",
-          y: isMobile ? "-1rem" : "-2.75rem",
-          fontWeight: "900",
-          scale: 0.75,
+          y: "100%",
           duration: 0.75,
+          stagger: 0.05,
         },
         4.5
       )
+      // Design moves and enlarges
       .to(
         ".intro__preloader .intro__outro-title .char",
         {
-          x: isMobile ? "-3rem" : "-8rem",
+          x: isMobile ? "-6rem" : "-15rem",
+          duration: 1,
+        },
+        5
+      )
+      .to(
+        ".intro__preloader .intro__outro-title .char",
+        {
           fontSize: isMobile ? "6rem" : "14rem",
           fontWeight: "500",
           duration: 0.75,
@@ -167,7 +178,7 @@ export default class extends Page {
             });
           },
         },
-        4.5
+        6
       );
 
     // Tag exits
@@ -178,7 +189,7 @@ export default class extends Page {
           y: "100%",
           duration: 0.75,
         },
-        5.5 + index * 0.1
+        6.5 + index * 0.1
       );
     });
 
@@ -203,7 +214,7 @@ export default class extends Page {
             }
           }
         },
-        6
+        7
       );
   }
 

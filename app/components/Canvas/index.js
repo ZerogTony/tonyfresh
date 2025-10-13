@@ -5,6 +5,7 @@ import each from 'lodash/each'
 import fragment from 'shaders/post.glsl'
 
 import { mapEach } from 'utils/dom'
+import Detection from 'classes/Detection'
 
 import Media from './Media'
 
@@ -15,19 +16,27 @@ export default class {
       g: 248,
       b: 248
     }
-     
+
 
     this.url = url
+    this.isMobile = Detection.isMobile()
 
-    this.renderer = new Renderer({ alpha: true })
+    // Reduce pixel ratio on mobile for better performance
+    const dpr = this.isMobile ? Math.min(window.devicePixelRatio, 1.5) : window.devicePixelRatio
+
+    this.renderer = new Renderer({
+      alpha: true,
+      dpr: dpr
+    })
     this.gl = this.renderer.gl
 
     this.resolution = {
       value: new Vec2()
     }
 
+    // Reduce geometry complexity on mobile
     this.planeGeometry = new Plane(this.gl, {
-      widthSegments: 30
+      widthSegments: this.isMobile ? 10 : 30
     })
 
     document.body.appendChild(this.gl.canvas)
@@ -62,6 +71,12 @@ export default class {
   }
 
   createPost () {
+    // Skip post-processing on mobile for better performance
+    if (this.isMobile) {
+      this.post = null
+      return
+    }
+
     this.post = new Post(this.gl)
 
     this.pass = this.post.addPass({
@@ -175,9 +190,10 @@ export default class {
       width
     }
 
-    this.post.resize()
-
-    this.resolution.value.set(this.gl.canvas.width, this.gl.canvas.height)
+    if (this.post) {
+      this.post.resize()
+      this.resolution.value.set(this.gl.canvas.width, this.gl.canvas.height)
+    }
 
     if (this.medias) {
       each(this.medias, media => media.onResize({
@@ -200,9 +216,57 @@ export default class {
       })
     }
 
-    this.post.render({
-      scene: this.scene,
-      camera: this.camera
-    })
+    if (this.post) {
+      this.post.render({
+        scene: this.scene,
+        camera: this.camera
+      })
+    } else {
+      // Direct render without post-processing
+      this.renderer.render({
+        scene: this.scene,
+        camera: this.camera
+      })
+    }
+  }
+
+  /**
+   * Destroy.
+   */
+  destroy () {
+    // Destroy all media instances
+    if (this.medias) {
+      each(this.medias, media => {
+        if (media.destroy) {
+          media.destroy()
+        }
+      })
+      this.medias = []
+    }
+
+    // Dispose geometry
+    if (this.planeGeometry) {
+      if (this.planeGeometry.vao) {
+        this.gl.deleteVertexArray(this.planeGeometry.vao)
+      }
+      if (this.planeGeometry.attributes) {
+        Object.values(this.planeGeometry.attributes).forEach(attr => {
+          if (attr.buffer) {
+            this.gl.deleteBuffer(attr.buffer)
+          }
+        })
+      }
+      this.planeGeometry = null
+    }
+
+    // Dispose post-processing
+    if (this.post) {
+      this.post = null
+    }
+
+    // Remove canvas from DOM
+    if (this.gl.canvas && this.gl.canvas.parentNode) {
+      this.gl.canvas.parentNode.removeChild(this.gl.canvas)
+    }
   }
 }

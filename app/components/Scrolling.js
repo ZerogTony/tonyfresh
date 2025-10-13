@@ -2,6 +2,7 @@ import NormalizeWheel from 'normalize-wheel'
 import Prefix from 'prefix'
 import each from 'lodash/each'
 import Component from 'classes/Component'
+import Detection from 'classes/Detection'
 import { getOffset } from 'utils/dom'
 import { lerp } from 'utils/math'
 
@@ -10,9 +11,13 @@ export default class extends Component {
     super({ element, elements })
 
     this.transformPrefix = Prefix('transform')
+    this.isMobile = Detection.isMobile()
+
+    // Faster ease on mobile for better responsiveness
+    const baseEase = this.isMobile ? 0.08 : 0.04
 
     this.scroll = {
-      ease: 0.04,
+      ease: baseEase,
       position: 0,
       current: 0,
       target: 0,
@@ -86,9 +91,11 @@ export default class extends Component {
 
   snapAfterDelay() {
     clearTimeout(this.scrollTimeout)
+    // Faster snap on mobile
+    const snapDelay = this.isMobile ? 100 : 150
     this.scrollTimeout = setTimeout(() => {
       this.snapToNearest()
-    }, 150)
+    }, snapDelay)
   }
 
   snapToNearest() {
@@ -115,6 +122,10 @@ export default class extends Component {
   }
 
   transform(element, y) {
+    // Use will-change sparingly for better mobile performance
+    if (this.isMobile && !element.style.willChange) {
+      element.style.willChange = 'transform'
+    }
     element.style[this.transformPrefix] = `translate3d(0, ${Math.floor(y)}px, 0)`
   }
 

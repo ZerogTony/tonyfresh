@@ -20,6 +20,7 @@ export default class extends Component {
     this.homeBottom = document.querySelector('.home__background__bottom')
     this.homeTop = document.querySelector('.home__background__top')
     this.aboutGallery = document.querySelector('.about__gallery')
+    this.homeCard = document.querySelector('.home__card')
 
     this.onChange(url)
 
@@ -101,24 +102,33 @@ export default class extends Component {
       if (this.homeBottom) {
         this.homeBottom.style.opacity = '0'
       }
-  
+
       if (this.homeTop) {
         this.homeTop.style.opacity = '0'
       }
-  
+
+      // Change white card to black (inverse of white text)
+      if (this.homeCard) {
+        GSAP.to(this.homeCard, {
+          backgroundColor: offBlack,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+
       if (this.canvas) {
         console.log('Animating canvas background to dark:', { r: 17, g: 17, b: 17 })
         console.log('Canvas background before animation:', this.canvas.background)
-        
+
         // Animate individual RGB components for smoother transition
         GSAP.to(this.canvas.background, {
           r: 17,
-          g: 17, 
+          g: 17,
           b: 17,
           duration: 0.5,
           ease: 'power2.inOut',
           onUpdate: () => {
-            console.log('Canvas RGB animating:', 
+            console.log('Canvas RGB animating:',
               `r:${Math.round(this.canvas.background.r)} g:${Math.round(this.canvas.background.g)} b:${Math.round(this.canvas.background.b)}`
             )
           },
@@ -167,16 +177,25 @@ export default class extends Component {
       if (this.homeBottom) {
         this.homeBottom.style.opacity = '0'
       }
-  
+
       if (this.homeTop) {
         this.homeTop.style.opacity = '0'
       }
-  
+
+      // Change card back to white (inverse of black text)
+      if (this.homeCard) {
+        GSAP.to(this.homeCard, {
+          backgroundColor: '#ffffff',
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+
       if (this.canvas) {
         const lightBg = this.getOriginalCanvasBackground()
         console.log('Animating canvas background to light:', lightBg)
         console.log('Canvas background before light animation:', this.canvas.background)
-        
+
         // Animate individual RGB components for smoother transition
         GSAP.to(this.canvas.background, {
           r: lightBg.r,
@@ -185,7 +204,7 @@ export default class extends Component {
           duration: 0.5,
           ease: 'power2.inOut',
           onUpdate: () => {
-            console.log('Canvas RGB animating to light:', 
+            console.log('Canvas RGB animating to light:',
               `r:${Math.round(this.canvas.background.r)} g:${Math.round(this.canvas.background.g)} b:${Math.round(this.canvas.background.b)}`
             )
           },

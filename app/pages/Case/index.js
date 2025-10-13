@@ -3,6 +3,7 @@ import Detection from 'classes/Detection';
 import Page from 'components/Page';
 import GSAP from 'gsap';
 import { delay } from 'utils/math';
+import SplitType from 'split-type';
 
 export default class extends Page {
   constructor(canvas) {
@@ -177,12 +178,20 @@ export default class extends Page {
     const titleText = this.elements.wrapper.querySelector('.case__title__text')
 
     if (titleText) {
-      GSAP.fromTo(titleText, {
-        y: '200%'
+      // Split text into characters
+      const split = new SplitType(titleText, {
+        types: 'chars',
+        tagName: 'span'
+      })
+
+      // Animate characters with stagger
+      GSAP.fromTo(split.chars, {
+        y: '100%'
       }, {
         y: '0%',
-        duration: 1.2,
-        ease: 'expo.out',
+        duration: 0.75,
+        ease: 'power3.out',
+        stagger: 0.05,
         delay: 0.3
       })
     }
@@ -192,6 +201,7 @@ export default class extends Page {
     // Get the case media element to know when to start fading
     this.caseMedia = this.elements.wrapper.querySelector('.case__media')
     this.navBackground = document.querySelector('.navigation__background')
+    this.canvasBackgroundElement = document.querySelector('.canvas__background')
     this.navLinks = document.querySelectorAll('.navigation a, .navigation button')
     this.whiteColor = { r: 248, g: 248, b: 248 }
     // projectColor is set in changeBackgroundColor()
@@ -235,14 +245,19 @@ export default class extends Page {
       this.canvas.background.b = this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress
     }
 
-    // Apply same fade to navigation background
-    if (this.navBackground) {
-      const r = Math.round(this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress)
-      const g = Math.round(this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress)
-      const b = Math.round(this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress)
+    // Apply same fade to navigation background and canvas__background div
+    const r = Math.round(this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress)
+    const g = Math.round(this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress)
+    const b = Math.round(this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress)
+    const bgColor = `rgb(${r}, ${g}, ${b})`
 
-      this.navBackground.style.setProperty('--nav-bg-color', `rgb(${r}, ${g}, ${b})`)
-      this.navBackground.style.background = `rgb(${r}, ${g}, ${b})`
+    if (this.navBackground) {
+      this.navBackground.style.setProperty('--nav-bg-color', bgColor)
+      this.navBackground.style.background = bgColor
+    }
+
+    if (this.canvasBackgroundElement) {
+      this.canvasBackgroundElement.style.backgroundColor = bgColor
     }
 
     // Fade navigation text color from white to black as background fades to white

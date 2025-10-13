@@ -20,6 +20,14 @@
   z-index: 20000;
 }
 
+// Hide navigation when intro is active
+body:has(.intro--active) .navigation,
+body:has(.intro--active) .navigation__background {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .navigation__list {
   
   @extend %cover;

@@ -3,6 +3,7 @@ import Scrolling from 'components/Scrolling'
 import GSAP from 'gsap'
 import { delay } from 'utils/math'
 import SplitType from 'split-type'
+import Detection from 'classes/Detection'
 
 export default class extends Page {
   constructor (canvas) {
@@ -24,6 +25,8 @@ export default class extends Page {
     this.hasTransitionPlayed = false
     this.animatedProjects = new Set()
     this.canvas = canvas
+    this.isMobile = Detection.isMobile()
+    this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     this.create()
   }
 
@@ -146,6 +149,13 @@ export default class extends Page {
       this.observer.disconnect()
     }
 
+    // Kill all GSAP animations on this page
+    GSAP.killTweensOf(this.elements.items)
+    GSAP.killTweensOf('.home__link__number')
+    GSAP.killTweensOf('.home__link__title .char span')
+    GSAP.killTweensOf('.home__link__title .word')
+    GSAP.killTweensOf('.home__link__description')
+
     await delay(400)
 
     return super.hide()
@@ -153,6 +163,10 @@ export default class extends Page {
 
   create () {
     super.create()
+
+    // Manually query canvas background since it's outside .home element
+    this.canvasBackgroundElement = document.querySelector('.canvas__background')
+    console.log('Manually queried canvas background:', this.canvasBackgroundElement)
 
     this.createList()
     this.splitTextElements()
@@ -175,12 +189,17 @@ export default class extends Page {
     const titles = document.querySelectorAll('.home__link__title')
 
     titles.forEach((title) => {
+      // On mobile or reduced motion, split by words for better performance
+      // On desktop, split by characters for detailed animation
+      const splitType = (this.isMobile || this.prefersReducedMotion) ? 'words' : 'chars'
+
       const split = new SplitType(title, {
-        types: 'chars',
+        types: splitType,
         tagName: 'span'
       })
 
-      if (split.chars) {
+      // Only wrap chars if we're doing character-level splitting
+      if (split.chars && splitType === 'chars') {
         split.chars.forEach((char) => {
           const originalText = char.textContent
           char.innerHTML = `<span>${originalText}</span>`
@@ -222,7 +241,12 @@ export default class extends Page {
     this.elements.items.forEach(project => {
       const numberElements = project.querySelectorAll('.home__link__number')
       const descriptionElements = project.querySelectorAll('.home__link__description')
-      const titleChars = project.querySelectorAll('.home__link__title .char span')
+
+      // Use word or char selector based on split type
+      const titleSelector = (this.isMobile || this.prefersReducedMotion)
+        ? '.home__link__title .word'
+        : '.home__link__title .char span'
+      const titleElements = project.querySelectorAll(titleSelector)
 
       // Set number and description to hidden
       GSAP.set([numberElements, descriptionElements], {
@@ -230,8 +254,8 @@ export default class extends Page {
         opacity: 0
       })
 
-      // Set title characters to hidden
-      GSAP.set(titleChars, {
+      // Set title elements to hidden
+      GSAP.set(titleElements, {
         y: '100%'
       })
 
@@ -246,7 +270,16 @@ export default class extends Page {
   animateProjectIn (project) {
     const numberElements = project.querySelectorAll('.home__link__number')
     const descriptionElements = project.querySelectorAll('.home__link__description')
-    const titleChars = project.querySelectorAll('.home__link__title .char span')
+
+    // Use word or char selector based on split type
+    const titleSelector = (this.isMobile || this.prefersReducedMotion)
+      ? '.home__link__title .word'
+      : '.home__link__title .char span'
+    const titleElements = project.querySelectorAll(titleSelector)
+
+    // Reduced durations and stagger on mobile for better performance
+    const duration = this.isMobile ? 0.5 : 0.8
+    const stagger = this.isMobile ? 0.02 : 0.05
 
     // Animate number in first
     GSAP.fromTo(numberElements, {
@@ -255,22 +288,22 @@ export default class extends Page {
     }, {
       y: '0%',
       opacity: 1,
-      duration: 0.8,
-      ease: 'expo.out',
+      duration: duration,
+      ease: this.isMobile ? 'power2.out' : 'expo.out',
       force3D: true,
       transformOrigin: 'center center'
     })
 
-    // Animate title characters with stagger (like Nullspace)
-    if (titleChars.length > 0) {
-      GSAP.fromTo(titleChars, {
+    // Animate title elements with stagger
+    if (titleElements.length > 0) {
+      GSAP.fromTo(titleElements, {
         y: '100%'
       }, {
         y: '0%',
-        duration: 0.75,
-        ease: 'expo.out',
-        stagger: 0.05,
-        delay: 0.04,
+        duration: this.isMobile ? 0.5 : 0.75,
+        ease: this.isMobile ? 'power2.out' : 'expo.out',
+        stagger: stagger,
+        delay: this.isMobile ? 0.02 : 0.04,
         force3D: true
       })
     }
@@ -282,9 +315,9 @@ export default class extends Page {
     }, {
       y: '0%',
       opacity: 1,
-      duration: 0.8,
-      ease: 'expo.out',
-      delay: 0.08,
+      duration: duration,
+      ease: this.isMobile ? 'power2.out' : 'expo.out',
+      delay: this.isMobile ? 0.04 : 0.08,
       force3D: true,
       transformOrigin: 'center center'
     })
@@ -293,8 +326,8 @@ export default class extends Page {
     numberElements.forEach(number => {
       GSAP.to(number, {
         '--underline-scale': 1,
-        duration: 0.3,
-        delay: 0.05,
+        duration: this.isMobile ? 0.2 : 0.3,
+        delay: this.isMobile ? 0.02 : 0.05,
         ease: 'power2.out'
       })
     })
@@ -355,14 +388,23 @@ export default class extends Page {
   animateProjectOut (project, immediate = false) {
     const numberElements = project.querySelectorAll('.home__link__number')
     const descriptionElements = project.querySelectorAll('.home__link__description')
-    const titleChars = project.querySelectorAll('.home__link__title .char span')
+
+    // Use word or char selector based on split type
+    const titleSelector = (this.isMobile || this.prefersReducedMotion)
+      ? '.home__link__title .word'
+      : '.home__link__title .char span'
+    const titleElements = project.querySelectorAll(titleSelector)
+
+    // Reduced durations on mobile
+    const duration = this.isMobile ? 0.3 : (immediate ? 0.4 : 0.5)
+    const stagger = this.isMobile ? 0.01 : (immediate ? 0.01 : 0.02)
 
     // Animate underlines out
     numberElements.forEach(number => {
       GSAP.to(number, {
         '--underline-scale': 0,
-        duration: immediate ? 0.2 : 0.25,
-        ease: immediate ? 'power2.out' : 'expo.in'
+        duration: this.isMobile ? 0.15 : (immediate ? 0.2 : 0.25),
+        ease: 'power2.out'
       })
     })
 
@@ -370,31 +412,37 @@ export default class extends Page {
     GSAP.to([numberElements, descriptionElements], {
       y: '100%',
       opacity: 0,
-      duration: immediate ? 0.4 : 0.5,
-      ease: immediate ? 'power2.in' : 'expo.in',
-      stagger: immediate ? 0.02 : 0.03,
+      duration: duration,
+      ease: this.isMobile ? 'power2.in' : (immediate ? 'power2.in' : 'expo.in'),
+      stagger: this.isMobile ? 0.01 : (immediate ? 0.02 : 0.03),
       force3D: true,
       transformOrigin: 'center center'
     })
 
-    // Animate title characters out with stagger
-    if (titleChars.length > 0) {
-      GSAP.to(titleChars, {
+    // Animate title elements out with stagger
+    if (titleElements.length > 0) {
+      GSAP.to(titleElements, {
         y: '100%',
-        duration: immediate ? 0.4 : 0.5,
-        ease: immediate ? 'power2.in' : 'expo.in',
-        stagger: immediate ? 0.01 : 0.02,
+        duration: duration,
+        ease: this.isMobile ? 'power2.in' : (immediate ? 'power2.in' : 'expo.in'),
+        stagger: stagger,
         force3D: true
       })
     }
   }
 
   changeBackgroundColor (projectId) {
-    if (!this.elements.canvasBackground) return
+    console.log('changeBackgroundColor called for:', projectId)
+    console.log('canvasBackgroundElement:', this.canvasBackgroundElement)
+
+    if (!this.canvasBackgroundElement) {
+      console.error('canvasBackground element not found!')
+      return
+    }
 
     // Define project colors (hex values for CSS)
     const projectColors = {
-      'sazy': '#dcd2c8', // much lighter brown
+      'sazy': '#3e5aa4', // swapped with ocb
       'ffmag': '#83715f',
       'popeyes': '#937284',
       'boxpark': '#fffd3c',
@@ -402,14 +450,14 @@ export default class extends Page {
       'stoli': '#ff0042',
       'turning-tide': '#a28a70',
       'idris-elba': '#000000', // black
-      'ocb': '#3e5aa4',
+      'ocb': '#dcd2c8', // swapped with sazy
       'jack-daniels': '#808080', // grey
       'inbound': '#fdcb47'
     }
 
     // Define text colors for each project
     const projectTextColors = {
-      'sazy': '#F7F7F7',
+      'sazy': '#B8CCFF', // swapped with ocb
       'ffmag': '#D9CEC3',
       'popeyes': '#FFE6E8', // much lighter pink for better contrast on red
       'boxpark': '#2C2C00', // dark olive for better contrast on yellow
@@ -417,49 +465,71 @@ export default class extends Page {
       'stoli': '#ffffff', // fine as is
       'turning-tide': '#ffffff', // fine as is
       'idris-elba': '#ffffff', // fine as is (portenoire)
-      'ocb': '#B8CCFF', // much lighter blue for better contrast on blue
+      'ocb': '#F7F7F7', // swapped with sazy
       'jack-daniels': '#ffffff', // fine as is
       'inbound': '#FFF4C4' // much lighter yellow for better contrast on yellow
     }
 
     const targetColor = projectColors[projectId]
-    if (targetColor) {
-      console.log('Changing canvas background for project:', projectId, targetColor)
+    console.log('Target color for', projectId, ':', targetColor)
 
-      // Animate canvas background color with gradients and navigation updating in real-time
-      GSAP.to(this.elements.canvasBackground, {
+    if (targetColor) {
+      console.log('Animating canvas__background div to:', targetColor)
+
+      // Animate the canvas__background div background color
+      GSAP.to(this.canvasBackgroundElement, {
         backgroundColor: targetColor,
         duration: 0.5,
         ease: 'power2.inOut',
+        onStart: () => console.log('Animation started'),
         onUpdate: () => {
-          // Update background gradients and navigation color as the background animates
+          // Update navigation and beams as the background animates
           this.updateBackgroundGradients()
-        }
+        },
+        onComplete: () => console.log('Animation complete')
       })
 
-      // Change text color to match the project
-      this.setProjectTextColors(projectId, projectTextColors[projectId])
+      // Animate home card beams to match project color
+      const beamTop = document.querySelector('.home__card__beam--top')
+      const beamBottom = document.querySelector('.home__card__beam--bottom')
+
+      if (beamTop) {
+        GSAP.to(beamTop, {
+          backgroundColor: targetColor,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+
+      if (beamBottom) {
+        GSAP.to(beamBottom, {
+          backgroundColor: targetColor,
+          duration: 0.5,
+          ease: 'power2.inOut'
+        })
+      }
+
+      // Update text colors based on project
+      const textColor = projectTextColors[projectId]
+      if (textColor) {
+        this.setProjectTextColors(projectId, textColor)
+      }
+    } else {
+      console.warn('No color defined for project:', projectId)
     }
   }
 
   setProjectTextColors(projectId, textColor) {
     const duration = 0.5
     const isLightText = textColor === '#ffffff'
-    
-    // Home page text
-    GSAP.to('.home', {
-      color: textColor,
-      duration: duration,
-      ease: 'power2.inOut'
-    })
-    
-    // Navigation elements
+
+    // Navigation elements only (keep home text black)
     GSAP.to('.navigation__link', {
       color: textColor,
       duration: duration,
       ease: 'power2.inOut'
     })
-    
+
     // Logo invert based on text color
     const logoImg = document.querySelector('.navigation__item:first-child img')
     if (logoImg) {
@@ -469,7 +539,7 @@ export default class extends Page {
         ease: 'power2.inOut'
       })
     }
-    
+
     // Easter egg button - use contrasting color to text
     const easterBtn = document.querySelector('.navigation__easter')
     if (easterBtn) {
@@ -488,24 +558,12 @@ export default class extends Page {
   }
 
   updateBackgroundGradients() {
-    if (!this.elements.canvasBackground) return
+    if (!this.canvasBackgroundElement) return
 
-    // Get the current canvas background color from computed style
-    const bgColor = window.getComputedStyle(this.elements.canvasBackground).backgroundColor
+    // Get the current canvas__background div color from computed style
+    const bgColor = window.getComputedStyle(this.canvasBackgroundElement).backgroundColor
 
-    // Update the gradient backgrounds to match current color
-    const topGradient = document.querySelector('.home__background__top')
-    const bottomGradient = document.querySelector('.home__background__bottom')
-
-    if (topGradient) {
-      topGradient.style.background = `linear-gradient(to bottom, ${bgColor} 0%, transparent 100%)`
-    }
-
-    if (bottomGradient) {
-      bottomGradient.style.background = `linear-gradient(to bottom, transparent 0%, ${bgColor} 100%)`
-    }
-
-    // Update navigation background to match current color
+    // Update navigation background to match current canvas__background color
     const navBgElement = document.querySelector('.navigation__background')
     if (navBgElement) {
       navBgElement.style.setProperty('--nav-bg-color', bgColor)
