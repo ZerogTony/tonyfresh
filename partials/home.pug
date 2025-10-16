@@ -10,7 +10,6 @@ mixin template(id, title, direction, number, description)
         decoding="async"
       )
       span.home__link__wrapper
-        span.home__link__number= number
         span.home__link__title= title
         span.home__link__description= description
 
@@ -19,9 +18,6 @@ section.home
   .home__overlay
     .home__overlay__row.home__overlay__row--top
     .home__overlay__row.home__overlay__row--bottom
-  .home__background
-    .home__background__top
-    .home__background__bottom
 
   .home__wrapper
     ul.home__list

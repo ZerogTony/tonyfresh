@@ -4,7 +4,7 @@ import { random } from 'utils/math'
 import GSAP from 'gsap'
 
 export default class extends Component {
-  constructor({ canvas, url }) {
+  constructor({ url }) {
     super({
       classes: {
         linksActive: 'navigation__link--active'
@@ -16,9 +16,6 @@ export default class extends Component {
       }
     })
 
-    this.canvas = canvas
-    this.homeBottom = document.querySelector('.home__background__bottom')
-    this.homeTop = document.querySelector('.home__background__top')
     this.aboutGallery = document.querySelector('.about__gallery')
     this.homeCard = document.querySelector('.home__card')
 

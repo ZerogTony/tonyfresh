@@ -20,7 +20,7 @@
   @extend %cover;
 
   opacity: 0;
-  transition: opacity 1.5s $ease-out-expo;
+  transition: opacity 0.8s $ease-out-expo;
 
 
   
@@ -156,5 +156,6 @@
 .case__description__text {
   padding-left: 0.5rem; // Adds padding to the left of the description text
 }
+
 
 

@@ -12,6 +12,7 @@ export default class ThreeSlider {
     this.projects = projects
     this.homeList = homeList
     this.isMobile = Detection.isMobile()
+    this.homeOffsetRatio = this.calculateHomeOffsetRatio()
     this.homeBaseScale = this.isMobile ? 0.6 : 0.35
 
     this.setSmoothingValues()
@@ -67,10 +68,38 @@ export default class ThreeSlider {
 
     this.scrollSmoothness = isMobile ? 0.7 : 0.6
     this.scrollPositionSmoothness = isMobile ? 0.12 : 0.09
-    this.settleSmoothness = isMobile ? 0.18 : 0.14
-    this.scrollDamping = isMobile ? 0.88 : 0.9
-    this.scrollStopEpsilon = isMobile ? 0.0007 : 0.0005
-    this.stableThreshold = isMobile ? 0.015 : 0.012
+    this.settleSmoothness = isMobile ? 0.14 : 0.12
+    this.scrollDamping = isMobile ? 0.9 : 0.92
+    this.scrollStopEpsilon = isMobile ? 0.0008 : 0.0006
+    this.stableThreshold = isMobile ? 0.012 : 0.01
+    this.targetSettleSmoothness = isMobile ? 0.18 : 0.16
+    this.targetSnapEpsilon = isMobile ? 0.0009 : 0.0007
+  }
+
+  calculateHomeOffsetRatio () {
+    const width = window.innerWidth
+
+    if (width <= 1024) return 0.04
+    if (width <= 1200) return 0.05
+    return 0.06
+  }
+
+  getViewportWorldDimensions () {
+    const fov = this.camera.fov * (Math.PI / 180)
+    const height = 2 * Math.tan(fov / 2) * this.camera.position.z
+    const width = height * this.camera.aspect
+
+    return { width, height }
+  }
+
+  applyHomeBaseTransform () {
+    if (!this.plane || !this.camera) return
+
+    const { height: viewportHeight } = this.getViewportWorldDimensions()
+    const offsetRatio = this.homeOffsetRatio
+    const offsetY = -offsetRatio * viewportHeight
+
+    this.plane.position.set(0, offsetY, 0)
   }
 
   createRenderer () {
@@ -191,6 +220,8 @@ export default class ThreeSlider {
     if (!this.isTransitioning) {
       this.plane.scale.set(this.homeBaseScale, this.homeBaseScale, 1)
     }
+
+    this.applyHomeBaseTransform()
   }
 
   getNearestScrollPosition (targetIndex) {
@@ -200,9 +231,20 @@ export default class ThreeSlider {
     if (!totalImages) return targetIndex
 
     const currentPosition = this.scrollPosition
-    const wraps = Math.round((currentPosition - targetIndex) / totalImages)
 
-    return targetIndex + (wraps * totalImages)
+    // Determine which repetition of targetIndex is closest to currentPosition
+    const baseCycle = Math.floor(currentPosition / totalImages)
+    let candidate = targetIndex + baseCycle * totalImages
+
+    const halfSpan = totalImages / 2
+
+    if (candidate - currentPosition > halfSpan) {
+      candidate -= totalImages
+    } else if (currentPosition - candidate > halfSpan) {
+      candidate += totalImages
+    }
+
+    return candidate
   }
 
   determineTextureIndices (position) {
@@ -472,9 +514,13 @@ export default class ThreeSlider {
     const currentPixelWidth = (currentWorldWidth / viewportWidth) * this.screen.width
     const currentPixelHeight = (currentWorldHeight / viewportHeight) * this.screen.height
 
+    const startLeft = (this.screen.width - currentPixelWidth) / 2
+    const startTop = (this.screen.height - currentPixelHeight) / 2
+    const offsetPx = this.screen.height * this.homeOffsetRatio
+
     this.transitionStartBounds = {
-      left: (this.screen.width - currentPixelWidth) / 2,
-      top: (this.screen.height - currentPixelHeight) / 2,
+      left: startLeft,
+      top: startTop + offsetPx,
       width: currentPixelWidth,
       height: currentPixelHeight
     }
@@ -598,6 +644,7 @@ export default class ThreeSlider {
 
     this.isMobile = Detection.isMobile()
     this.setSmoothingValues()
+    this.homeOffsetRatio = this.calculateHomeOffsetRatio()
     this.homeBaseScale = this.isMobile ? 0.6 : 0.35
 
     this.screen.width = window.innerWidth
@@ -620,10 +667,14 @@ export default class ThreeSlider {
       )
     }
 
-    if (!this.isTransitioning && !this.scrollLocked && previousBaseScale !== this.homeBaseScale) {
-      const scaleRatio = this.homeBaseScale / previousBaseScale
-      this.plane.scale.x *= scaleRatio
-      this.plane.scale.y *= scaleRatio
+    if (!this.isTransitioning && !this.scrollLocked && this.plane) {
+      if (previousBaseScale !== this.homeBaseScale && previousBaseScale) {
+        const scaleRatio = this.homeBaseScale / previousBaseScale
+        this.plane.scale.x *= scaleRatio
+        this.plane.scale.y *= scaleRatio
+      }
+
+      this.applyHomeBaseTransform()
     }
   }
 
@@ -661,6 +712,39 @@ export default class ThreeSlider {
 
       this.updateTextureIndices()
 
+      // Emit continuous scroll progress for background color blending
+      if (!this.isTransitioning && !this.scrollLocked) {
+        const indices = this.determineTextureIndices(this.scrollPosition)
+        const t = indices.normalizedPosition
+
+        // Throttle events to reduce chatter
+        if (
+          this._lastScrollEmitT === undefined ||
+          Math.abs(t - this._lastScrollEmitT) > 0.01 ||
+          this._lastScrollEmitCurrent !== indices.currentIndex ||
+          this._lastScrollEmitNext !== indices.nextIndex
+        ) {
+          this._lastScrollEmitT = t
+          this._lastScrollEmitCurrent = indices.currentIndex
+          this._lastScrollEmitNext = indices.nextIndex
+
+          const currentProject = this.projects[indices.currentIndex]
+          const nextProject = this.projects[indices.nextIndex]
+          const currentId = currentProject ? currentProject.id : null
+          const nextId = nextProject ? nextProject.id : null
+
+          window.dispatchEvent(new CustomEvent('sliderScrollProgress', {
+            detail: {
+              currentIndex: indices.currentIndex,
+              nextIndex: indices.nextIndex,
+              currentId,
+              nextId,
+              t
+            }
+          }))
+        }
+      }
+
       // Update current project continuously during scroll for text sync
       if (!this.scrollLocked) {
         this.updateCurrentProject()
@@ -696,8 +780,14 @@ export default class ThreeSlider {
 
         this.targetScrollIntensity = 0
 
-        const nearestTarget = Math.round(this.scrollPosition)
-        if (Math.abs(this.targetScrollPosition - nearestTarget) > 0.0001) {
+        const nearestTarget = Math.round(this.targetScrollPosition)
+        this.targetScrollPosition = lerp(
+          this.targetScrollPosition,
+          nearestTarget,
+          this.targetSettleSmoothness
+        )
+
+        if (Math.abs(this.targetScrollPosition - nearestTarget) < this.targetSnapEpsilon) {
           this.targetScrollPosition = nearestTarget
         }
       }
@@ -705,9 +795,12 @@ export default class ThreeSlider {
       const scrollDelta = Math.abs(this.targetScrollPosition - this.scrollPosition)
       const isWithinThreshold = scrollDelta < this.getSettleThreshold()
 
-      if (isWithinThreshold) {
+      const targetSnapDistance = Math.abs(this.targetScrollPosition - Math.round(this.targetScrollPosition))
+      const isTargetSnapped = targetSnapDistance < this.targetSnapEpsilon
+
+      if (isWithinThreshold && isTargetSnapped) {
         if (!this.isStable) {
-          const indices = this.determineTextureIndices(this.targetScrollPosition)
+          const indices = this.determineTextureIndices(Math.round(this.targetScrollPosition))
           this.stableCurrentIndex = indices.currentIndex
           this.stableNextIndex = indices.nextIndex
         }
@@ -867,8 +960,8 @@ export default class ThreeSlider {
     // Reset plane to base scale
     this.plane.scale.set(this.homeBaseScale, this.homeBaseScale, 1)
 
-    // Reset plane to center position
-    this.plane.position.set(0, 0, 0)
+    // Reset plane to home offset position
+    this.applyHomeBaseTransform()
 
     // Reset transition state
     this.isTransitioning = false

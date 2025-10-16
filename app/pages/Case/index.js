@@ -6,7 +6,7 @@ import { delay } from 'utils/math';
 import SplitType from 'split-type';
 
 export default class extends Page {
-  constructor(canvas) {
+  constructor({ slider }) {
     super({
       classes: {
         active: 'cases--active',
@@ -21,8 +21,8 @@ export default class extends Page {
       isScrollable: true
     });
 
+    this.slider = slider;
     this.animatedDescriptions = new Set();
-    this.canvas = canvas;
     this.create();
   }
 
@@ -256,9 +256,7 @@ export default class extends Page {
       this.navBackground.style.background = bgColor
     }
 
-    if (this.canvasBackgroundElement) {
-      this.canvasBackgroundElement.style.backgroundColor = bgColor
-    }
+    // Shader background now renders behind; keep div transparent
 
     // Fade navigation text color from white to black as background fades to white
     if (this.navLinks) {
@@ -277,13 +275,15 @@ export default class extends Page {
   /**
    * Animations.
    */
-  show (url) {
+  async show (url) {
     this.element.classList.add(this.classes.active)
 
     const id = url.replace('/case/', '').replace('/', '')
 
     this.elements.wrapper = Array.from(this.elements.cases).find(item => item.id === id)
     this.elements.wrapper.classList.add(this.classes.caseActive)
+
+    const caseImage = this.elements.wrapper.querySelector('.case__media__image')
 
     // Change canvas background to match project color
     this.changeBackgroundColor(id)
@@ -324,6 +324,56 @@ export default class extends Page {
 
     // Setup background color fade
     this.setupBackgroundColorFade()
+
+    // Handle slider transition if coming from home page
+    if (this.slider && this.slider.isTransitioning) {
+      // Position slider plane over case media element
+      this.slider.positionOnCaseHeader(id)
+
+      if (caseImage) {
+        const previousTransition = caseImage.style.transition
+
+        caseImage.style.transition = 'none'
+        caseImage.style.opacity = '0'
+        caseImage.style.visibility = 'visible'
+
+        // Force reflow so the opacity jump happens instantly without CSS transition
+        // eslint-disable-next-line no-unused-expressions
+        caseImage.offsetHeight
+
+        caseImage.style.transition = previousTransition || ''
+
+        const revealDelay = 0.15
+        const resetDelay = previousTransition ? 0.1 : 0
+
+        GSAP.delayedCall(revealDelay, () => {
+          caseImage.style.opacity = '1'
+        })
+
+        if (resetDelay > 0) {
+          GSAP.delayedCall(revealDelay + resetDelay, () => {
+            caseImage.style.transition = previousTransition
+          })
+        }
+      }
+
+      const sliderFadeDelay = 0.8
+      GSAP.delayedCall(sliderFadeDelay, () => {
+        this.slider.hide()
+        window.dispatchEvent(new CustomEvent('unlockScroll'))
+      })
+    } else if (this.slider) {
+      // Coming from elsewhere, hide the slider and show real image
+      this.slider.hide()
+      window.dispatchEvent(new CustomEvent('unlockScroll'))
+
+      if (caseImage) {
+        caseImage.style.opacity = '1'
+        caseImage.style.visibility = 'visible'
+      }
+    } else {
+      window.dispatchEvent(new CustomEvent('unlockScroll'))
+    }
 
     return super.show()
   }
@@ -482,13 +532,27 @@ export default class extends Page {
   async hide (nextUrl) {
     this.scroll.target = 0
 
+    // Show the real case image before leaving (in case canvas was being used)
+    if (this.elements.wrapper) {
+      const caseImage = this.elements.wrapper.querySelector('.case__media__image')
+      if (caseImage) {
+        caseImage.style.opacity = '1'
+        caseImage.style.visibility = 'visible'
+
+        window.requestAnimationFrame(() => {
+          caseImage.style.removeProperty('opacity')
+          caseImage.style.removeProperty('visibility')
+        })
+      }
+    }
+
     this.elements.wrapper.classList.remove(this.classes.caseActive)
 
     this.element.classList.remove(this.classes.active)
 
     // Only reset background and navigation to default when NOT going back to home page
     const isGoingToHome = nextUrl && nextUrl === '/home'
-    
+
     if (!isGoingToHome) {
       // Reset canvas background and navigation to default when leaving case page
       if (this.canvas) {
@@ -511,6 +575,7 @@ export default class extends Page {
         })
       }
     }
+    // Note: When going back to home, slider will be reset by Home.show()
 
     // Clean up intersection observer
     if (this.descriptionObserver) {

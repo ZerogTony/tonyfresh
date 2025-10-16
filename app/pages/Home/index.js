@@ -1,12 +1,14 @@
 import Page from 'components/Page'
-import Scrolling from 'components/Scrolling'
 import GSAP from 'gsap'
 import { delay } from 'utils/math'
 import SplitType from 'split-type'
 import Detection from 'classes/Detection'
 
+const CARD_CLIP_OPEN = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'
+const CARD_CLIP_CLOSED = 'polygon(0% 50%, 100% 50%, 100% 50%, 0% 50%)'
+
 export default class extends Page {
-  constructor (canvas) {
+  constructor ({ slider }) {
     super({
       classes: {
         active: 'home--active'
@@ -19,30 +21,39 @@ export default class extends Page {
         overlayBottom: '.home__overlay__row--bottom',
         canvasBackground: '.canvas__background'
       },
-      isScrollable: true
+      isScrollable: false
     })
 
+    this.slider = slider
     this.hasTransitionPlayed = false
-    this.animatedProjects = new Set()
-    this.canvas = canvas
+    this.projectElementsById = {}
+    this.clickListenersAttached = false
+    this.currentProjectId = null
+    this.awaitingSliderNavigation = false
     this.isMobile = Detection.isMobile()
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    this.onSliderProjectChange = this.onSliderProjectChange.bind(this)
+    this.onSliderTransitionStart = this.onSliderTransitionStart.bind(this)
+    this.onSliderScrollStart = this.onSliderScrollStart.bind(this)
+    this.onSliderSettled = this.onSliderSettled.bind(this)
+    this.pendingProjectHideTween = null
+    this.pendingProjectHideId = null
+    this.cardElement = null
+    this.cardRevealTimeline = null
+    this.cardCollapseTimeline = null
+    this.isCardOpen = false
     this.create()
   }
 
   show (url) {
-    this.list.enable()
     this.element.classList.add(this.classes.active)
+    window.dispatchEvent(new CustomEvent('unlockScroll'))
 
-    // Fade in white card
-    const card = document.querySelector('.home__card')
-    if (card) {
-      GSAP.to(card, {
-        opacity: 1,
-        duration: 0.4,
-        ease: 'power2.inOut'
-      })
+    if (this.slider) {
+      this.slider.resetToHomeState()
     }
+
+    this.playCardReveal()
 
     // Fade in feathered borders with delay
     const featherTop = document.querySelector('.home__background__top')
@@ -57,16 +68,14 @@ export default class extends Page {
     }
 
     // Reset animation tracking when returning to home
-    this.animatedProjects.clear()
+    this.currentProjectId = null
 
-    // Re-setup initial states for all projects
+    this.buildProjectLookup()
+    if (!this.clickListenersAttached) {
+      this.setupProjectClickListeners()
+    }
     this.setupInitialProjectStates()
-
-    // Animate any currently visible projects immediately, then setup observer for the rest
-    this.animateVisibleProjects()
-
-    // Reconnect intersection observer after a brief delay to ensure proper triggering
-    this.reconnectObserver()
+    this.initializeActiveProject()
 
     return super.show()
   }
@@ -97,6 +106,12 @@ export default class extends Page {
     // Dispatch event to lock hover animations
     window.dispatchEvent(new CustomEvent('homeTransitionStart'))
 
+    if (this.pendingProjectHideTween) {
+      this.pendingProjectHideTween.kill()
+      this.pendingProjectHideTween = null
+      this.pendingProjectHideId = null
+    }
+
     // Fade out feathered borders immediately (no delay)
     const featherTop = document.querySelector('.home__background__top')
     const featherBottom = document.querySelector('.home__background__bottom')
@@ -108,21 +123,13 @@ export default class extends Page {
       })
     }
 
-    // Fade out white card
-    const card = document.querySelector('.home__card')
-    if (card) {
-      GSAP.to(card, {
-        opacity: 0,
-        duration: 0.4,
-        ease: 'power2.inOut'
-      })
-    }
+    await this.playCardCollapse({ waitForCompletion: true, skipIfCollapsed: true })
 
     // Animate text elements out with slide-up
     this.animateTextOutImmediate()
 
     // Wait for animation to complete before hiding
-    await delay(400)
+    await delay(600)
     
     this.list.disable()
     this.element.classList.remove(this.classes.active)
@@ -144,14 +151,8 @@ export default class extends Page {
       this.setProjectTextColors('default', '#2c2c2c')
     }
 
-    // Clean up intersection observer
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-
     // Kill all GSAP animations on this page
     GSAP.killTweensOf(this.elements.items)
-    GSAP.killTweensOf('.home__link__number')
     GSAP.killTweensOf('.home__link__title .char span')
     GSAP.killTweensOf('.home__link__title .word')
     GSAP.killTweensOf('.home__link__description')
@@ -166,22 +167,165 @@ export default class extends Page {
 
     // Manually query canvas background since it's outside .home element
     this.canvasBackgroundElement = document.querySelector('.canvas__background')
-    console.log('Manually queried canvas background:', this.canvasBackgroundElement)
+    this.cardElement = document.querySelector('.home__card')
 
     this.createList()
     this.splitTextElements()
-    this.createIntersectionObserver()
+    this.buildProjectLookup()
+    this.setupProjectClickListeners()
     this.setupInitialProjectStates()
+    this.initializeActiveProject()
+
+    window.addEventListener('sliderProjectChange', this.onSliderProjectChange)
+    window.addEventListener('sliderTransitionStart', this.onSliderTransitionStart)
+    window.addEventListener('sliderScrollStart', this.onSliderScrollStart)
+    window.addEventListener('sliderSettled', this.onSliderSettled)
+  }
+
+  getCardElement () {
+    if (!this.cardElement || !document.body.contains(this.cardElement)) {
+      this.cardElement = document.querySelector('.home__card')
+    }
+
+    return this.cardElement
+  }
+
+  playCardReveal () {
+    const card = this.getCardElement()
+    if (!card) return
+
+    if (this.cardCollapseTimeline) {
+      this.cardCollapseTimeline.kill()
+      this.cardCollapseTimeline = null
+    }
+
+    if (this.cardRevealTimeline) {
+      this.cardRevealTimeline.kill()
+      this.cardRevealTimeline = null
+    }
+
+    GSAP.killTweensOf(card)
+
+    if (this.prefersReducedMotion) {
+      GSAP.set(card, {
+        opacity: 1,
+        clipPath: CARD_CLIP_OPEN
+      })
+      this.isCardOpen = true
+      return
+    }
+
+    GSAP.set(card, {
+      opacity: 0,
+      clipPath: CARD_CLIP_CLOSED
+    })
+    this.isCardOpen = false
+
+    this.cardRevealTimeline = GSAP.timeline({
+      onComplete: () => {
+        this.cardRevealTimeline = null
+        this.isCardOpen = true
+      }
+    })
+
+    this.cardRevealTimeline
+      .to(card, {
+        opacity: 1,
+        duration: 0.35,
+        ease: 'power2.out'
+      })
+      .to(card, {
+        clipPath: CARD_CLIP_OPEN,
+        duration: 0.75,
+        ease: 'power3.out'
+      }, 0)
+  }
+
+  playCardCollapse ({ waitForCompletion = false, skipIfCollapsed = false } = {}) {
+    const card = this.getCardElement()
+    if (!card) return Promise.resolve()
+
+    const isEligibleForSkip = !this.isCardOpen && !this.cardRevealTimeline && !this.cardCollapseTimeline
+    if (skipIfCollapsed && isEligibleForSkip) {
+      return Promise.resolve()
+    }
+
+    if (this.cardRevealTimeline) {
+      this.cardRevealTimeline.kill()
+      this.cardRevealTimeline = null
+    }
+
+    if (this.cardCollapseTimeline) {
+      this.cardCollapseTimeline.kill()
+      this.cardCollapseTimeline = null
+    }
+
+    GSAP.killTweensOf(card)
+
+    if (this.prefersReducedMotion) {
+      this.isCardOpen = false
+      GSAP.set(card, { clipPath: CARD_CLIP_CLOSED })
+
+      const tween = GSAP.to(card, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.inOut'
+      })
+
+      if (waitForCompletion) {
+        return new Promise(resolve => {
+          tween.eventCallback('onComplete', resolve)
+        })
+      }
+
+      return Promise.resolve()
+    }
+
+    this.isCardOpen = false
+    let resolveHandler = null
+
+    this.cardCollapseTimeline = GSAP.timeline()
+    this.cardCollapseTimeline.eventCallback('onComplete', () => {
+      this.cardCollapseTimeline = null
+      if (resolveHandler) {
+        resolveHandler()
+      }
+    })
+
+    this.cardCollapseTimeline
+      .to(card, {
+        clipPath: CARD_CLIP_CLOSED,
+        duration: 0.6,
+        ease: 'power3.in'
+      })
+      .to(card, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power1.in'
+      }, '-=0.2')
+
+    if (waitForCompletion) {
+      return new Promise(resolve => {
+        resolveHandler = resolve
+      })
+    }
+
+    return Promise.resolve()
   }
 
   createList () {
-    this.list = new Scrolling({
-      element: document.body,
-      elements: {
-        list: this.elements.list,
-        items: this.elements.items
-      }
-    })
+    const noop = () => {}
+
+    this.list = {
+      enable: noop,
+      disable: noop,
+      onResize: noop,
+      onTouchDown: noop,
+      onTouchMove: noop,
+      onTouchUp: noop,
+      onWheel: noop,
+      update: noop
+    }
   }
 
   splitTextElements () {
@@ -189,9 +333,8 @@ export default class extends Page {
     const titles = document.querySelectorAll('.home__link__title')
 
     titles.forEach((title) => {
-      // On mobile or reduced motion, split by words for better performance
-      // On desktop, split by characters for detailed animation
-      const splitType = (this.isMobile || this.prefersReducedMotion) ? 'words' : 'chars'
+      const preferWordsOnly = this.prefersReducedMotion
+      const splitType = preferWordsOnly ? 'words' : 'words,chars'
 
       const split = new SplitType(title, {
         types: splitType,
@@ -199,7 +342,7 @@ export default class extends Page {
       })
 
       // Only wrap chars if we're doing character-level splitting
-      if (split.chars && splitType === 'chars') {
+      if (!preferWordsOnly && split.chars) {
         split.chars.forEach((char) => {
           const originalText = char.textContent
           char.innerHTML = `<span>${originalText}</span>`
@@ -208,227 +351,333 @@ export default class extends Page {
     })
   }
 
-  createIntersectionObserver () {
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const projectId = entry.target.dataset.projectId || entry.target.querySelector('.home__link').href.split('/').pop()
+  getProjectItems () {
+    if (!this.elements.items) return []
 
-        if (entry.isIntersecting) {
-          // Change background color based on visible project
-          this.changeBackgroundColor(projectId)
+    if (this.elements.items instanceof window.NodeList) {
+      return Array.from(this.elements.items)
+    }
 
-          // Always animate in when entering viewport
-          this.animateProjectIn(entry.target)
-        } else {
-          // Animate out when leaving viewport
-          this.animateProjectOut(entry.target, false)
-        }
-      })
-    }, {
-      threshold: 0.3, // Trigger when 30% of project is visible
-      rootMargin: '0px 0px -10% 0px' // Trigger slightly before entering viewport
-    })
+    if (Array.isArray(this.elements.items)) {
+      return this.elements.items
+    }
 
-    // Observe all projects
-    this.elements.items.forEach((item, index) => {
-      item.dataset.projectId = item.querySelector('.home__link').href.split('/').pop()
-      this.observer.observe(item)
+    return [this.elements.items]
+  }
+
+  buildProjectLookup () {
+    this.projectElementsById = {}
+
+    const items = this.getProjectItems()
+
+    items.forEach(item => {
+      const link = item.querySelector('.home__link')
+      if (!link) return
+
+      const projectId = link.href.replace(`${window.location.origin}/case/`, '')
+      if (projectId) {
+        this.projectElementsById[projectId] = item
+        item.dataset.projectId = projectId
+      }
     })
   }
 
+  setupProjectClickListeners () {
+    const items = this.getProjectItems()
+
+    items.forEach(item => {
+      const link = item.querySelector('.home__link')
+      if (!link) return
+
+      link.addEventListener('click', async (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        const projectId = link.href.replace(`${window.location.origin}/case/`, '')
+
+        if (!this.slider || this.awaitingSliderNavigation) {
+          return
+        }
+
+        this.awaitingSliderNavigation = true
+
+        try {
+          await this.playCardCollapse({
+            waitForCompletion: true,
+            skipIfCollapsed: false
+          })
+
+          const transitionPromise = this.slider.onProjectClick(projectId)
+
+          if (!transitionPromise || typeof transitionPromise.then !== 'function') {
+            this.playCardReveal()
+            return
+          }
+
+          const result = await transitionPromise
+
+          if (!result || result.cancelled) {
+            this.playCardReveal()
+            return
+          }
+
+          const resolvedProjectId = result.projectId || projectId
+
+          window.dispatchEvent(new CustomEvent('requestNavigation', {
+            detail: { url: `/case/${resolvedProjectId}` }
+          }))
+        } catch (error) {
+          console.error('[Home] Error awaiting slider transition', error)
+          this.playCardReveal()
+        } finally {
+          this.awaitingSliderNavigation = false
+        }
+      })
+    })
+
+    this.clickListenersAttached = true
+  }
+
+  initializeActiveProject () {
+    let initialProjectId = null
+
+    if (this.slider && Array.isArray(this.slider.projects) && this.slider.projects.length > 0) {
+      const currentIndex = this.slider.currentProjectIndex || 0
+      const currentProject = this.slider.projects[currentIndex]
+      initialProjectId = currentProject ? currentProject.id : null
+    }
+
+    if (!initialProjectId) {
+      const items = this.getProjectItems()
+
+      if (items.length > 0) {
+        const link = items[0].querySelector('.home__link')
+        if (link) {
+          initialProjectId = link.href.replace(`${window.location.origin}/case/`, '')
+        }
+      }
+    }
+
+    if (initialProjectId) {
+      this.activateProject(initialProjectId, { immediate: true })
+      this.changeBackgroundColor(initialProjectId)
+    }
+  }
+
+  activateProject (projectId, { immediate = false } = {}) {
+    if (!projectId || !this.projectElementsById[projectId]) return
+
+    if (this.currentProjectId === projectId && !immediate) return
+
+    if (this.pendingProjectHideTween && this.pendingProjectHideId === projectId) {
+      this.pendingProjectHideTween.kill()
+      this.pendingProjectHideTween = null
+      this.pendingProjectHideId = null
+    }
+
+    const newProject = this.projectElementsById[projectId]
+    const previousProject = this.currentProjectId ? this.projectElementsById[this.currentProjectId] : null
+
+    if (previousProject && previousProject !== newProject) {
+      previousProject.classList.remove('home__item--active')
+
+      if (immediate) {
+        this.resetProjectToHiddenState(previousProject)
+      } else {
+        this.animateProjectOut(previousProject, true)
+      }
+    }
+
+    newProject.classList.add('home__item--active')
+
+    if (immediate) {
+      this.showProjectImmediately(newProject)
+    } else {
+      this.animateProjectIn(newProject)
+    }
+
+    this.currentProjectId = projectId
+  }
+
+  showProjectImmediately (project) {
+    const descriptionElements = project.querySelectorAll('.home__link__description')
+
+    const useWordsOnly = this.prefersReducedMotion
+    const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
+    const titleElements = project.querySelectorAll(titleSelector)
+
+    const resolvedTitleElements = (titleElements.length === 0 && !useWordsOnly)
+      ? project.querySelectorAll('.home__link__title .word')
+      : titleElements
+
+    const killTargets = [
+      ...descriptionElements,
+      ...resolvedTitleElements
+    ]
+
+    GSAP.killTweensOf(killTargets)
+
+    GSAP.set(descriptionElements, {
+      y: '0%',
+      opacity: 1
+    })
+
+    GSAP.set(resolvedTitleElements, {
+      y: '0%'
+    })
+  }
+
+  resetProjectToHiddenState (project) {
+    if (!project) return
+
+    const descriptionElements = project.querySelectorAll('.home__link__description')
+
+    const useWordsOnly = this.prefersReducedMotion
+    const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
+    const titleElements = project.querySelectorAll(titleSelector)
+
+    const resolvedTitleElements = (titleElements.length === 0 && !useWordsOnly)
+      ? project.querySelectorAll('.home__link__title .word')
+      : titleElements
+
+    const killTargets = [
+      ...descriptionElements,
+      ...resolvedTitleElements
+    ]
+
+    GSAP.killTweensOf(killTargets)
+
+    GSAP.set(descriptionElements, {
+      y: '100%',
+      opacity: 0
+    })
+
+    GSAP.set(resolvedTitleElements, {
+      y: '100%'
+    })
+
+    project.classList.remove('home__item--active')
+  }
+
   setupInitialProjectStates () {
-    // Set all projects to initial hidden state
-    this.elements.items.forEach(project => {
-      const numberElements = project.querySelectorAll('.home__link__number')
-      const descriptionElements = project.querySelectorAll('.home__link__description')
+    const items = this.getProjectItems()
 
-      // Use word or char selector based on split type
-      const titleSelector = (this.isMobile || this.prefersReducedMotion)
-        ? '.home__link__title .word'
-        : '.home__link__title .char span'
-      const titleElements = project.querySelectorAll(titleSelector)
-
-      // Set number and description to hidden
-      GSAP.set([numberElements, descriptionElements], {
-        y: '100%',
-        opacity: 0
-      })
-
-      // Set title elements to hidden
-      GSAP.set(titleElements, {
-        y: '100%'
-      })
-
-      numberElements.forEach(number => {
-        GSAP.set(number, {
-          '--underline-scale': 0
-        })
-      })
+    items.forEach(project => {
+      this.resetProjectToHiddenState(project)
     })
   }
 
   animateProjectIn (project) {
-    const numberElements = project.querySelectorAll('.home__link__number')
     const descriptionElements = project.querySelectorAll('.home__link__description')
 
-    // Use word or char selector based on split type
-    const titleSelector = (this.isMobile || this.prefersReducedMotion)
-      ? '.home__link__title .word'
-      : '.home__link__title .char span'
+    const useWordsOnly = this.prefersReducedMotion
+    const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
     const titleElements = project.querySelectorAll(titleSelector)
 
-    // Reduced durations and stagger on mobile for better performance
-    const duration = this.isMobile ? 0.5 : 0.8
-    const stagger = this.isMobile ? 0.02 : 0.05
+    const resolvedTitleElements = (titleElements.length === 0 && !useWordsOnly)
+      ? project.querySelectorAll('.home__link__title .word')
+      : titleElements
 
-    // Animate number in first
-    GSAP.fromTo(numberElements, {
-      y: '100%',
-      opacity: 0
-    }, {
-      y: '0%',
-      opacity: 1,
-      duration: duration,
-      ease: this.isMobile ? 'power2.out' : 'expo.out',
-      force3D: true,
-      transformOrigin: 'center center'
-    })
+    GSAP.killTweensOf(descriptionElements)
+    GSAP.killTweensOf(resolvedTitleElements)
 
-    // Animate title elements with stagger
-    if (titleElements.length > 0) {
-      GSAP.fromTo(titleElements, {
+    if (this.prefersReducedMotion) {
+      GSAP.set(descriptionElements, { y: '0%', opacity: 1 })
+      GSAP.set(resolvedTitleElements, { y: '0%' })
+      return
+    }
+
+    const titleDuration = this.isMobile ? 0.6 : 0.75
+    const titleStagger = this.isMobile ? 0.03 : 0.05
+    const titleDelay = this.isMobile ? 0.1 : 0.2
+
+    if (resolvedTitleElements.length > 0) {
+      GSAP.fromTo(resolvedTitleElements, {
         y: '100%'
       }, {
         y: '0%',
-        duration: this.isMobile ? 0.5 : 0.75,
-        ease: this.isMobile ? 'power2.out' : 'expo.out',
-        stagger: stagger,
-        delay: this.isMobile ? 0.02 : 0.04,
+        duration: titleDuration,
+        ease: 'power3.out',
+        stagger: titleStagger,
+        delay: titleDelay,
         force3D: true
       })
     }
 
-    // Animate description last
+    const descriptionDuration = this.isMobile ? 0.5 : 0.7
+
     GSAP.fromTo(descriptionElements, {
       y: '100%',
       opacity: 0
     }, {
       y: '0%',
       opacity: 1,
-      duration: duration,
-      ease: this.isMobile ? 'power2.out' : 'expo.out',
-      delay: this.isMobile ? 0.04 : 0.08,
+      duration: descriptionDuration,
+      ease: 'power3.out',
+      delay: titleDelay + (this.isMobile ? 0.05 : 0.1),
       force3D: true,
       transformOrigin: 'center center'
     })
-
-    // Animate underlines in
-    numberElements.forEach(number => {
-      GSAP.to(number, {
-        '--underline-scale': 1,
-        duration: this.isMobile ? 0.2 : 0.3,
-        delay: this.isMobile ? 0.02 : 0.05,
-        ease: 'power2.out'
-      })
-    })
   }
 
-  animateVisibleProjects () {
-    // Find and animate all projects currently visible in the viewport
-    this.elements.items.forEach(project => {
-      if (this.isProjectInViewport(project)) {
-        const projectId = project.querySelector('.home__link').href.split('/').pop()
-        
-        if (!this.animatedProjects.has(projectId)) {
-          this.animateProjectIn(project)
-          this.animatedProjects.add(projectId)
-        }
-      }
-    })
-  }
+  animateProjectOut (project, immediate = false) {
+    const descriptionElements = project.querySelectorAll('.home__link__description')
 
-  isProjectInViewport (project) {
-    const rect = project.getBoundingClientRect()
-    const windowHeight = window.innerHeight || document.documentElement.clientHeight
-    
-    // Consider project visible if any part is in viewport
-    return (
-      rect.bottom > 0 && 
-      rect.top < windowHeight &&
-      rect.bottom > windowHeight * 0.1 // At least 10% visible
-    )
-  }
+    const useWordsOnly = this.prefersReducedMotion
+    const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
+    const titleElements = project.querySelectorAll(titleSelector)
 
-  reconnectObserver () {
-    // Disconnect and reconnect observer to ensure it triggers for all projects
-    if (this.observer) {
-      this.observer.disconnect()
+    const resolvedTitleElements = (titleElements.length === 0 && !useWordsOnly)
+      ? project.querySelectorAll('.home__link__title .word')
+      : titleElements
+
+    GSAP.killTweensOf(descriptionElements)
+    GSAP.killTweensOf(resolvedTitleElements)
+
+    if (this.prefersReducedMotion) {
+      GSAP.set(descriptionElements, { opacity: 0 })
+      GSAP.set(resolvedTitleElements, { y: '100%' })
+      return
     }
-    
-    // Small delay to ensure DOM is ready and animations have started
-    setTimeout(() => {
-      this.createIntersectionObserver()
-    }, 100)
+
+    const outDuration = this.isMobile ? 0.35 : (immediate ? 0.4 : 0.45)
+    const outStagger = this.isMobile ? 0.015 : (immediate ? 0.02 : 0.03)
+
+    GSAP.to(resolvedTitleElements, {
+      y: '100%',
+      duration: outDuration,
+      ease: immediate ? 'power2.in' : 'power3.in',
+      stagger: outStagger,
+      force3D: true
+    })
+
+    GSAP.to(descriptionElements, {
+      y: '100%',
+      opacity: 0,
+      duration: outDuration,
+      ease: immediate ? 'power2.in' : 'power3.in',
+      stagger: outStagger,
+      force3D: true,
+      transformOrigin: 'center center'
+    })
   }
 
   animateTextOut () {
     // Animate all visible projects out
-    this.elements.items.forEach(project => {
-      this.animateProjectOut(project, false)
+    const items = this.getProjectItems()
+
+    items.forEach(project => {
+      this.resetProjectToHiddenState(project)
     })
   }
 
   animateTextOutImmediate () {
     // Animate all visible projects out immediately
-    this.elements.items.forEach(project => {
-      this.animateProjectOut(project, true)
+    const items = this.getProjectItems()
+
+    items.forEach(project => {
+      this.resetProjectToHiddenState(project)
     })
-  }
-
-  animateProjectOut (project, immediate = false) {
-    const numberElements = project.querySelectorAll('.home__link__number')
-    const descriptionElements = project.querySelectorAll('.home__link__description')
-
-    // Use word or char selector based on split type
-    const titleSelector = (this.isMobile || this.prefersReducedMotion)
-      ? '.home__link__title .word'
-      : '.home__link__title .char span'
-    const titleElements = project.querySelectorAll(titleSelector)
-
-    // Reduced durations on mobile
-    const duration = this.isMobile ? 0.3 : (immediate ? 0.4 : 0.5)
-    const stagger = this.isMobile ? 0.01 : (immediate ? 0.01 : 0.02)
-
-    // Animate underlines out
-    numberElements.forEach(number => {
-      GSAP.to(number, {
-        '--underline-scale': 0,
-        duration: this.isMobile ? 0.15 : (immediate ? 0.2 : 0.25),
-        ease: 'power2.out'
-      })
-    })
-
-    // Animate number and description out
-    GSAP.to([numberElements, descriptionElements], {
-      y: '100%',
-      opacity: 0,
-      duration: duration,
-      ease: this.isMobile ? 'power2.in' : (immediate ? 'power2.in' : 'expo.in'),
-      stagger: this.isMobile ? 0.01 : (immediate ? 0.02 : 0.03),
-      force3D: true,
-      transformOrigin: 'center center'
-    })
-
-    // Animate title elements out with stagger
-    if (titleElements.length > 0) {
-      GSAP.to(titleElements, {
-        y: '100%',
-        duration: duration,
-        ease: this.isMobile ? 'power2.in' : (immediate ? 'power2.in' : 'expo.in'),
-        stagger: stagger,
-        force3D: true
-      })
-    }
   }
 
   changeBackgroundColor (projectId) {
@@ -474,20 +723,8 @@ export default class extends Page {
     console.log('Target color for', projectId, ':', targetColor)
 
     if (targetColor) {
-      console.log('Animating canvas__background div to:', targetColor)
-
-      // Animate the canvas__background div background color
-      GSAP.to(this.canvasBackgroundElement, {
-        backgroundColor: targetColor,
-        duration: 0.5,
-        ease: 'power2.inOut',
-        onStart: () => console.log('Animation started'),
-        onUpdate: () => {
-          // Update navigation and beams as the background animates
-          this.updateBackgroundGradients()
-        },
-        onComplete: () => console.log('Animation complete')
-      })
+      // Shader background handles visuals now; keep navigation in sync directly
+      this.updateNavigationBackground(targetColor)
 
       // Animate home card beams to match project color
       const beamTop = document.querySelector('.home__card__beam--top')
@@ -557,17 +794,11 @@ export default class extends Page {
     this.setProjectTextColors('default', isLight ? '#ffffff' : '#2c2c2c')
   }
 
-  updateBackgroundGradients() {
-    if (!this.canvasBackgroundElement) return
-
-    // Get the current canvas__background div color from computed style
-    const bgColor = window.getComputedStyle(this.canvasBackgroundElement).backgroundColor
-
-    // Update navigation background to match current canvas__background color
+  updateNavigationBackground(color) {
     const navBgElement = document.querySelector('.navigation__background')
     if (navBgElement) {
-      navBgElement.style.setProperty('--nav-bg-color', bgColor)
-      navBgElement.style.background = bgColor
+      navBgElement.style.setProperty('--nav-bg-color', color)
+      navBgElement.style.background = color
     }
   }
 
@@ -591,10 +822,109 @@ export default class extends Page {
 
   onWheel (event) {
     this.list.onWheel(event)
+
+    if (this.slider) {
+      const normalized = event.deltaY || event.detail || event.wheelDelta
+      this.slider.onScroll(normalized)
+    }
   }
 
   update () {
     super.update()
     this.list.update()
+  }
+
+  onSliderProjectChange (event) {
+    const { projectId, isStable } = event.detail
+
+    this.changeBackgroundColor(projectId)
+
+    if (!isStable) return
+    if (!this.element || !this.element.classList.contains(this.classes.active)) return
+    if (this.awaitingSliderNavigation) return
+    if (!projectId) return
+    if (this.currentProjectId === projectId) return
+
+    this.activateProject(projectId)
+  }
+
+  onSliderTransitionStart (event) {
+    const { projectId } = event.detail
+    console.log('[Home] Slider transition start for:', projectId)
+
+    window.dispatchEvent(new CustomEvent('lockScroll'))
+
+    if (this.list && this.list.disable) {
+      this.list.disable()
+    }
+
+    // Ensure card is collapsed if transition was triggered externally
+    this.playCardCollapse({ waitForCompletion: false, skipIfCollapsed: true })
+
+    this.activateProject(projectId)
+    this.changeBackgroundColor(projectId)
+
+    console.log('[Home] Slider transition initiated, awaiting completion via promise')
+  }
+
+  onSliderScrollStart () {
+    if (!this.element || !this.element.classList.contains(this.classes.active)) return
+    if (this.awaitingSliderNavigation) return
+
+    if (this.currentProjectId !== null) {
+      const currentProjectId = this.currentProjectId
+      const currentProject = this.projectElementsById[currentProjectId]
+
+      if (currentProject) {
+        if (this.pendingProjectHideTween) {
+          this.pendingProjectHideTween.kill()
+          this.pendingProjectHideTween = null
+          this.pendingProjectHideId = null
+        }
+
+        this.animateProjectOut(currentProject)
+
+        const cleanupDelay = this.isMobile ? 0.4 : 0.55
+        this.pendingProjectHideId = currentProjectId
+        this.pendingProjectHideTween = GSAP.delayedCall(cleanupDelay, () => {
+          if (this.currentProjectId !== currentProjectId) {
+            this.resetProjectToHiddenState(currentProject)
+          }
+          this.pendingProjectHideTween = null
+          this.pendingProjectHideId = null
+        })
+      }
+
+      this.currentProjectId = null
+    }
+  }
+
+  onSliderSettled (event) {
+    if (!this.element || !this.element.classList.contains(this.classes.active)) return
+    if (this.awaitingSliderNavigation) return
+
+    const { projectId } = event.detail || {}
+    if (!projectId) return
+
+    if (this.currentProjectId === projectId) {
+      return
+    }
+
+    this.activateProject(projectId)
+  }
+
+  destroy () {
+    window.removeEventListener('sliderProjectChange', this.onSliderProjectChange)
+    window.removeEventListener('sliderTransitionStart', this.onSliderTransitionStart)
+    window.removeEventListener('sliderScrollStart', this.onSliderScrollStart)
+    window.removeEventListener('sliderSettled', this.onSliderSettled)
+
+    if (this.pendingProjectHideTween) {
+      this.pendingProjectHideTween.kill()
+      this.pendingProjectHideTween = null
+      this.pendingProjectHideId = null
+    }
+
+    super.destroy()
   }
 }

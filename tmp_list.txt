@@ -1,0 +1,21 @@
+1: canvas {
+2:   display: block;
+3:   height: 100vh;
+4:   left: 0;
+5:   pointer-events: none;
+6:   position: fixed;
+7:   top: 0;
+8:   width: 100%;
+9:   z-index: z('canvas');
+10: }
+11: 
+12: .canvas__background {
+13:   position: fixed;
+14:   top: 0;
+15:   left: 0;
+16:   width: 100%;
+17:   height: 100vh;
+18:   background: transparent; // Shader background canvas will be appended here
+19:   z-index: z('canvas-background');
+20:   pointer-events: none;
+21: }

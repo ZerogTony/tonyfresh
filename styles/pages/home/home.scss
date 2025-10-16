@@ -4,9 +4,18 @@
   background: transparent;
   color: $color-pine-tree;
   transition: opacity 0s ease, visibility 0s ease;
+  --home-layout-offset: 6vh;
 
   &--active {
     @extend %page--active;
+  }
+
+  @include media('<=1200px') {
+    --home-layout-offset: 5vh;
+  }
+
+  @include media('<=phone') {
+    --home-layout-offset: 4vh;
   }
 }
 
@@ -40,45 +49,8 @@
 }
 
 
-.home__background {
-  @extend %cover;
-  color: rgb(0, 0, 0);
-  display: block;
-  pointer-events: none;
-  z-index: 10; /* Above home items so gradients layer on top */
-
-  &__top,
-  &__bottom {
-    content: '';
-    display: block;
-    height: 10rem;
-    position: fixed;
-    width: 30%; // Match card width
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-  }
-
-  &__top {
-    background: linear-gradient(to bottom, white 0%, transparent 100%);
-    top: calc(50vh - 30vh); // Top edge of card
-
-    @include media('<=phone') {
-      width: 75%;
-      height: 7rem;
-    }
-  }
-
-  &__bottom {
-    background: linear-gradient(to bottom, transparent 0%, white 100%);
-    top: calc(50vh + 30vh - 10rem); // Bottom edge of card minus gradient height
-
-    @include media('<=phone') {
-      width: 75%;
-      height: 7rem;
-    }
-  }
-}
+// REMOVED: home__background and home__card__beam elements
+// These were part of the old card-based layout and are no longer needed with the Three.js slider
 
 .home__card {
   position: fixed;
@@ -90,9 +62,10 @@
   background: white;
   z-index: z('card'); // z-index 2: behind canvas (3) and content (4)
   pointer-events: none;
-  opacity: 1;
+  opacity: 0;
   overflow: hidden;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); // Default visible
+  clip-path: polygon(0% 50%, 100% 50%, 100% 50%, 0% 50%); // Start collapsed for reveal
+  will-change: clip-path, opacity;
 
   @include media('<=phone') {
     width: 75%;
@@ -100,70 +73,37 @@
   }
 }
 
-.home__card__beam--top,
-.home__card__beam--bottom {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(30% + 2px); // Match card width + 2px to cover sub-pixel gaps
-  background: orange;
-  z-index: 10000;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.4s ease 1s, visibility 0.4s ease 1s;
-
-  @include media('<=phone') {
-    width: calc(75% + 2px); // Match mobile card width + 2px to cover sub-pixel gaps
-  }
-}
-
-.home__card__beam--top {
-  top: 0;
-  height: calc(50vh - 30vh); // Desktop: top to card top (60% height card)
-
-  @include media('<=phone') {
-    height: calc(50vh - 25vh); // Mobile: 50% height card
-  }
-}
-
-.home__card__beam--bottom {
-  top: calc(50vh + 30vh); // Desktop: card bottom to screen bottom
-  height: calc(50vh - 30vh);
-
-  @include media('<=phone') {
-    top: calc(50vh + 25vh); // Mobile: 50% height card
-    height: calc(50vh - 25vh);
-  }
-}
-
-// Hide beams when case or about page is active (immediate, no delay)
-body:has(.case--active) .home__card__beam--top,
-body:has(.case--active) .home__card__beam--bottom,
-body:has(.about--active) .home__card__beam--top,
-body:has(.about--active) .home__card__beam--bottom {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
-}
-
 .home__wrapper {
   @extend %cover;
 }
 
 .home__list {
-  display: flex;
-  flex-direction: column;
-  gap: 40rem;
+  position: relative;
+  width: 100%;
+  height: 100vh;
 }
 
 .home__item {
   font: 7rem/9 $font-neue-montreal;
   white-space: nowrap;
-  height: 100vh;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: translate(-50%, -50%) translateY(var(--home-layout-offset, 6vh));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 0;
   margin-bottom: 0;
+
+  &.home__item--active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+  }
 
   @include media('<=900px') {
     font: 5rem/9 $font-neue-montreal;
@@ -171,8 +111,7 @@ body:has(.about--active) .home__card__beam--bottom {
 
   @include media('<=phone') {
     font: 2rem/9 $font-neue-montreal;
-    height: auto;
-    padding: 10rem 0;
+    padding: 0 2rem;
   }
 
   @include media('<=320px') {
@@ -204,39 +143,17 @@ body:has(.about--active) .home__card__beam--bottom {
 .home__link__wrapper {
   display: flex;
   flex-direction: column;
-  margin-bottom: 3rem;
-  min-width: 72.3rem;
+  gap: 1.2rem;
+  margin-bottom: 2.4rem;
+  min-width: 60rem;
 
-  .home__link__number {
-    display: block;
-    font-size: 2rem;
-    font-weight: 400;
-    line-height: 1;
-    opacity: 0.5;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    position: relative;
-    will-change: transform, opacity;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    --underline-scale: 1;
+  @include media('<=900px') {
+    min-width: 48rem;
+  }
 
-    @include media('<=900px') {
-      font-size: 1.8rem;
-    }
-
-    @include media('<=phone') {
-      font-size: 1.6rem;
-      margin-bottom: 0.5rem;
-    }
-
-    @include media('<=320px') {
-      font-size: 1.4rem;
-    }
-
-    &::after {
-      display: none;
-    }
+  @include media('<=phone') {
+    min-width: 100%;
+    margin-bottom: 1.6rem;
   }
 
   .home__link__title {

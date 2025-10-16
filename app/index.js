@@ -16,9 +16,8 @@ import About from 'pages/About'
 import Case from 'pages/Case'
 import Home from 'pages/Home'
 
-
-
-import Canvas from 'components/Canvas'
+import ThreeSlider from 'components/ThreeSlider'
+import ShaderBackground from 'components/ShaderBackground'
 import Navigation from 'components/Navigation'
 
 class App {
@@ -40,13 +39,15 @@ class App {
     this.lastScrollPosition = 0
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+    this.isScrollLocked = false
+    this.previousScrollLockStyles = null
+
     AutoBind(this)
-
-
-      this.createCanvas()
 
     this.createGlobalOverlay()
     this.createNavigation()
+    this.createSlider()
+    this.createShaderBackground()
     this.createCase()
     this.createHome()
     this.createAbout()
@@ -82,12 +83,6 @@ class App {
   createLazyLoad () {
     this.lazyLoad = new LazyLoad()
     this.lazyLoad.init()
-  }
-
-  createCanvas () {
-    this.canvas = new Canvas({
-      url: this.url
-    })
   }
 
   createGlobalOverlay () {
@@ -147,11 +142,115 @@ class App {
     })
   }
 
+  lockScroll () {
+    if (this.isScrollLocked) return
+
+    this.isScrollLocked = true
+
+    const content = document.querySelector('.content')
+
+    this.previousScrollLockStyles = {
+      body: {
+        overflow: document.body.style.overflow,
+        pointerEvents: document.body.style.pointerEvents
+      },
+      html: {
+        overflow: document.documentElement.style.overflow
+      },
+      content: content
+        ? {
+            overflow: content.style.overflow,
+            pointerEvents: content.style.pointerEvents
+          }
+        : null
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.pointerEvents = 'none'
+    document.documentElement.style.overflow = 'hidden'
+
+    if (content) {
+      content.style.overflow = 'hidden'
+      content.style.pointerEvents = 'none'
+    }
+  }
+
+  unlockScroll () {
+    if (!this.isScrollLocked) return
+
+    this.isScrollLocked = false
+
+    const content = document.querySelector('.content')
+
+    if (this.previousScrollLockStyles) {
+      document.body.style.overflow = this.previousScrollLockStyles.body.overflow || ''
+      document.body.style.pointerEvents = this.previousScrollLockStyles.body.pointerEvents || ''
+      document.documentElement.style.overflow = this.previousScrollLockStyles.html.overflow || ''
+
+      if (content && this.previousScrollLockStyles.content) {
+        content.style.overflow = this.previousScrollLockStyles.content.overflow || ''
+        content.style.pointerEvents = this.previousScrollLockStyles.content.pointerEvents || ''
+      } else if (content) {
+        content.style.overflow = ''
+        content.style.pointerEvents = ''
+      }
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
+      document.documentElement.style.overflow = ''
+
+      if (content) {
+        content.style.overflow = ''
+        content.style.pointerEvents = ''
+      }
+    }
+
+    this.previousScrollLockStyles = null
+  }
+
   createNavigation () {
     this.navigation = new Navigation({
-      canvas: this.canvas,
       url: this.url
     })
+  }
+
+  createSlider () {
+    // Query all home project items
+    const homeItems = document.querySelectorAll('.home__item')
+
+    if (homeItems.length === 0) {
+      console.warn('No .home__item elements found, slider not created')
+      return
+    }
+
+    // Build projects data array
+    const projectsData = []
+    homeItems.forEach((item, index) => {
+      const link = item.querySelector('.home__link')
+      if (link) {
+        const id = link.href.replace(`${window.location.origin}/case/`, '')
+        projectsData.push({
+          element: item,
+          id: id,
+          index: index
+        })
+      }
+    })
+
+    // Get home list element
+    const homeList = document.querySelector('.home__list')
+
+    // Create slider
+    this.slider = new ThreeSlider({
+      projects: projectsData,
+      homeList: homeList
+    })
+
+    console.log('ThreeSlider created at App level with', projectsData.length, 'projects')
+  }
+
+  createShaderBackground () {
+    this.shaderBackground = new ShaderBackground()
   }
 
   createStats () {
@@ -178,11 +277,11 @@ class App {
   }
 
   createHome () {
-    this.home = new Home(this.canvas)
+    this.home = new Home({ slider: this.slider })
   }
 
   createCase () {
-    this.case = new Case(this.canvas)
+    this.case = new Case({ slider: this.slider })
   }
 
 
@@ -200,10 +299,6 @@ class App {
 
     const previousUrl = this.url
     this.url = url
-
-    if (this.canvas) {
-      this.canvas.onChange(this.url)
-    }
 
     // Special intro-to-home transition (no global overlay needed - intro animation handles the split)
     if (previousUrl === '/' && this.url === '/home') {
@@ -270,12 +365,6 @@ class App {
       this.page.update()
     }
 
-    // Only update canvas if scroll changed or animations are running
-    if (this.canvas && this.canvas.update && (scrollChanged || this.isAnimating || Detection.isMobile() === false)) {
-      this.canvas.update(currentScroll)
-      this.lastScrollPosition = currentScroll
-    }
-
     if (this.stats) {
       this.stats.end()
     }
@@ -312,14 +401,12 @@ class App {
     if (this.case) {
       this.case.onResize()
     }
-
-    if (this.canvas && this.canvas.onResize) {
-      this.canvas.onResize()
-    }
   }
 
   onTouchDown (event) {
     event.stopPropagation()
+
+    if (this.isScrollLocked) return
 
     if (!Detection.isMobile() && event.target.tagName === 'A') return
 
@@ -329,14 +416,12 @@ class App {
     if (this.page && this.page.onTouchDown) {
       this.page.onTouchDown(event)
     }
-
-    if (this.canvas && this.canvas.onTouchDown) {
-      this.canvas.onTouchDown(this.mouse)
-    }
   }
 
   onTouchMove (event) {
     event.stopPropagation()
+
+    if (this.isScrollLocked) return
 
     this.mouse.x = event.touches ? event.touches[0].clientX : event.clientX
     this.mouse.y = event.touches ? event.touches[0].clientY : event.clientY
@@ -344,14 +429,12 @@ class App {
     if (this.page && this.page.onTouchMove) {
       this.page.onTouchMove(event)
     }
-
-    if (this.canvas && this.canvas.onTouchMove) {
-      this.canvas.onTouchMove(this.mouse)
-    }
   }
 
   onTouchUp (event) {
     event.stopPropagation()
+
+    if (this.isScrollLocked) return
 
     this.mouse.x = event.changedTouches ? event.changedTouches[0].clientX : event.clientX
     this.mouse.y = event.changedTouches ? event.changedTouches[0].clientY : event.clientY
@@ -359,19 +442,13 @@ class App {
     if (this.page && this.page.onTouchUp) {
       this.page.onTouchUp(event)
     }
-
-    if (this.canvas && this.canvas.onTouchUp) {
-      this.canvas.onTouchUp(this.mouse)
-    }
   }
 
   onWheel (event) {
+    if (this.isScrollLocked) return
+
     if (this.page && this.page.onWheel) {
       this.page.onWheel(event)
-    }
-
-    if (this.canvas && this.canvas.onWheel) {
-      this.canvas.onWheel(event)
     }
   }
 
@@ -392,6 +469,15 @@ class App {
       // Page is visible again, resume
       console.log('Page visible, resuming rendering')
     }
+  }
+
+  onRequestNavigation (event) {
+    const { url } = event.detail
+
+    this.onChange({
+      url,
+      push: true
+    })
   }
 
   /**
@@ -418,6 +504,12 @@ class App {
     // Page Visibility API for pausing when hidden
     document.addEventListener('visibilitychange', this.onVisibilityChange, { passive: true })
 
+    window.addEventListener('lockScroll', this.lockScroll, { passive: true })
+    window.addEventListener('unlockScroll', this.unlockScroll, { passive: true })
+
+    // Listen for navigation requests from slider transitions
+    window.addEventListener('requestNavigation', this.onRequestNavigation, { passive: true })
+
     window.oncontextmenu = this.onContextMenu
   }
 
@@ -426,6 +518,12 @@ class App {
 
     each(links, link => {
       const isLocal = link.href.indexOf(window.location.origin) > -1
+      const isSliderLink = link.classList && link.classList.contains('home__link')
+
+      if (isSliderLink) {
+        link.onclick = null
+        return
+      }
 
       if (isLocal && !link.classList.contains('case__back')) {
         link.onclick = event => {
