@@ -1,0 +1,13 @@
+*** Begin Patch
+*** Update File: app/pages/Case/index.js
+@@
+-    const whiteColor = this.whiteColor || { r: 248, g: 248, b: 248 }
+-        const colorR = this.projectColor.r + (whiteColor.r - this.projectColor.r) * progress
+-    const colorG = this.projectColor.g + (whiteColor.g - this.projectColor.g) * progress
+-    const colorB = this.projectColor.b + (whiteColor.b - this.projectColor.b) * progress
++    const whiteColor = this.whiteColor || { r: 248, g: 248, b: 248 }
++    const colorR = this.projectColor.r + (whiteColor.r - this.projectColor.r) * progress
++    const colorG = this.projectColor.g + (whiteColor.g - this.projectColor.g) * progress
++    const colorB = this.projectColor.b + (whiteColor.b - this.projectColor.b) * progress
+*** End Patch
+

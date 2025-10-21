@@ -42,6 +42,7 @@ export default class extends Page {
     this.cardRevealTimeline = null
     this.cardCollapseTimeline = null
     this.isCardOpen = false
+    this.suppressProjectAnimations = false
     this.create()
   }
 
@@ -49,8 +50,26 @@ export default class extends Page {
     this.element.classList.add(this.classes.active)
     window.dispatchEvent(new CustomEvent('unlockScroll'))
 
+    const canvasBg = document.querySelector('.canvas__background')
+    if (canvasBg) {
+      canvasBg.style.background = 'transparent'
+      canvasBg.style.removeProperty('background-color')
+    }
+
+    this.suppressProjectAnimations = false
+
     if (this.slider) {
-      this.slider.resetToHomeState()
+      let returnedProjectId = null
+
+      if (typeof this.slider.consumeReturnedFromCaseProjectId === 'function') {
+        returnedProjectId = this.slider.consumeReturnedFromCaseProjectId()
+      }
+
+      if (returnedProjectId) {
+        this.slider.enableScrollMode()
+      } else {
+        this.slider.resetToHomeState()
+      }
     }
 
     this.playCardReveal()
@@ -490,7 +509,9 @@ export default class extends Page {
 
     newProject.classList.add('home__item--active')
 
-    if (immediate) {
+    if (this.suppressProjectAnimations) {
+      this.resetProjectToHiddenState(newProject, { preserveActiveClass: true })
+    } else if (immediate) {
       this.showProjectImmediately(newProject)
     } else {
       this.animateProjectIn(newProject)
@@ -501,6 +522,7 @@ export default class extends Page {
 
   showProjectImmediately (project) {
     const descriptionElements = project.querySelectorAll('.home__link__description')
+    const metaElements = project.querySelectorAll('.home__link__meta')
 
     const useWordsOnly = this.prefersReducedMotion
     const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
@@ -512,7 +534,8 @@ export default class extends Page {
 
     const killTargets = [
       ...descriptionElements,
-      ...resolvedTitleElements
+      ...resolvedTitleElements,
+      ...metaElements
     ]
 
     GSAP.killTweensOf(killTargets)
@@ -525,12 +548,18 @@ export default class extends Page {
     GSAP.set(resolvedTitleElements, {
       y: '0%'
     })
+
+    GSAP.set(metaElements, {
+      opacity: 1,
+      y: '0%'
+    })
   }
 
-  resetProjectToHiddenState (project) {
+  resetProjectToHiddenState (project, { preserveActiveClass = false } = {}) {
     if (!project) return
 
     const descriptionElements = project.querySelectorAll('.home__link__description')
+    const metaElements = project.querySelectorAll('.home__link__meta')
 
     const useWordsOnly = this.prefersReducedMotion
     const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
@@ -542,7 +571,8 @@ export default class extends Page {
 
     const killTargets = [
       ...descriptionElements,
-      ...resolvedTitleElements
+      ...resolvedTitleElements,
+      ...metaElements
     ]
 
     GSAP.killTweensOf(killTargets)
@@ -556,7 +586,18 @@ export default class extends Page {
       y: '100%'
     })
 
-    project.classList.remove('home__item--active')
+    metaElements.forEach(meta => {
+      const isBottom = meta.classList.contains('home__link__meta--bottom-left') || meta.classList.contains('home__link__meta--bottom-right')
+      const offset = isBottom ? '30%' : '-30%'
+      GSAP.set(meta, {
+        opacity: 0,
+        y: offset
+      })
+    })
+
+    if (!preserveActiveClass) {
+      project.classList.remove('home__item--active')
+    }
   }
 
   setupInitialProjectStates () {
@@ -569,6 +610,7 @@ export default class extends Page {
 
   animateProjectIn (project) {
     const descriptionElements = project.querySelectorAll('.home__link__description')
+    const metaElements = project.querySelectorAll('.home__link__meta')
 
     const useWordsOnly = this.prefersReducedMotion
     const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
@@ -580,10 +622,12 @@ export default class extends Page {
 
     GSAP.killTweensOf(descriptionElements)
     GSAP.killTweensOf(resolvedTitleElements)
+    GSAP.killTweensOf(metaElements)
 
     if (this.prefersReducedMotion) {
       GSAP.set(descriptionElements, { y: '0%', opacity: 1 })
       GSAP.set(resolvedTitleElements, { y: '0%' })
+      GSAP.set(metaElements, { opacity: 1, y: '0%' })
       return
     }
 
@@ -618,10 +662,29 @@ export default class extends Page {
       force3D: true,
       transformOrigin: 'center center'
     })
+
+    if (metaElements.length > 0) {
+      metaElements.forEach(meta => {
+        const isBottom = meta.classList.contains('home__link__meta--bottom-left') || meta.classList.contains('home__link__meta--bottom-right')
+        const fromY = isBottom ? '30%' : '-30%'
+
+        GSAP.fromTo(meta, {
+          y: fromY,
+          opacity: 0
+        }, {
+          y: '0%',
+          opacity: 1,
+          duration: this.isMobile ? 0.45 : 0.55,
+          ease: 'power3.out',
+          delay: titleDelay + (this.isMobile ? 0.1 : 0.15)
+        })
+      })
+    }
   }
 
   animateProjectOut (project, immediate = false) {
     const descriptionElements = project.querySelectorAll('.home__link__description')
+    const metaElements = project.querySelectorAll('.home__link__meta')
 
     const useWordsOnly = this.prefersReducedMotion
     const titleSelector = useWordsOnly ? '.home__link__title .word' : '.home__link__title .char span'
@@ -633,25 +696,29 @@ export default class extends Page {
 
     GSAP.killTweensOf(descriptionElements)
     GSAP.killTweensOf(resolvedTitleElements)
+    GSAP.killTweensOf(metaElements)
 
     if (this.prefersReducedMotion) {
       GSAP.set(descriptionElements, { opacity: 0 })
       GSAP.set(resolvedTitleElements, { y: '100%' })
-      return
+      GSAP.set(metaElements, { opacity: 0 })
+      return null
     }
 
     const outDuration = this.isMobile ? 0.35 : (immediate ? 0.4 : 0.45)
     const outStagger = this.isMobile ? 0.015 : (immediate ? 0.02 : 0.03)
 
-    GSAP.to(resolvedTitleElements, {
+    const tl = GSAP.timeline()
+
+    tl.to(resolvedTitleElements, {
       y: '100%',
       duration: outDuration,
       ease: immediate ? 'power2.in' : 'power3.in',
       stagger: outStagger,
       force3D: true
-    })
+    }, 0)
 
-    GSAP.to(descriptionElements, {
+    tl.to(descriptionElements, {
       y: '100%',
       opacity: 0,
       duration: outDuration,
@@ -659,7 +726,23 @@ export default class extends Page {
       stagger: outStagger,
       force3D: true,
       transformOrigin: 'center center'
-    })
+    }, 0)
+
+    if (metaElements.length > 0) {
+      metaElements.forEach(meta => {
+        const isBottom = meta.classList.contains('home__link__meta--bottom-left') || meta.classList.contains('home__link__meta--bottom-right')
+        const toY = isBottom ? '30%' : '-30%'
+
+        tl.to(meta, {
+          y: toY,
+          opacity: 0,
+          duration: outDuration,
+          ease: immediate ? 'power2.in' : 'power3.in'
+        }, 0)
+      })
+    }
+
+    return tl
   }
 
   animateTextOut () {
@@ -802,6 +885,15 @@ export default class extends Page {
     }
   }
 
+  animateActiveProjectOutForTransition () {
+    if (!this.currentProjectId) return null
+
+    const project = this.projectElementsById[this.currentProjectId]
+    if (!project) return null
+
+    return this.animateProjectOut(project, false)
+  }
+
 
   onResize () {
     super.onResize()
@@ -849,7 +941,12 @@ export default class extends Page {
   }
 
   onSliderTransitionStart (event) {
-    const { projectId } = event.detail
+    const detail = event ? (event.detail || {}) : {}
+    const { projectId, direction } = detail
+
+    if (direction === 'reverse') {
+      return
+    }
     console.log('[Home] Slider transition start for:', projectId)
 
     window.dispatchEvent(new CustomEvent('lockScroll'))
@@ -857,6 +954,9 @@ export default class extends Page {
     if (this.list && this.list.disable) {
       this.list.disable()
     }
+
+    this.suppressProjectAnimations = true
+    this.animateActiveProjectOutForTransition()
 
     // Ensure card is collapsed if transition was triggered externally
     this.playCardCollapse({ waitForCompletion: false, skipIfCollapsed: true })

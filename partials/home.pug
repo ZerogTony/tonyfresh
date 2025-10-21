@@ -1,6 +1,10 @@
-mixin template(id, title, direction, number, description)
+mixin template(id, title, direction, number, description, year, discipline)
   li.home__item(class=`home__item--${id}`)
     a.home__link(href=`/case/${id}`)
+      span.home__link__meta.home__link__meta--top-left
+        span.home__link__meta__inner= number
+      span.home__link__meta.home__link__meta--top-right
+        span.home__link__meta__inner= year
       img.home__link__media(
         alt=`${title} Project Preview`,
         data-direction=direction,
@@ -12,6 +16,10 @@ mixin template(id, title, direction, number, description)
       span.home__link__wrapper
         span.home__link__title= title
         span.home__link__description= description
+      span.home__link__meta.home__link__meta--bottom-left
+        span.home__link__meta__inner= discipline
+      span.home__link__meta.home__link__meta--bottom-right
+        span.home__link__meta__inner View Project
 
 
 section.home
@@ -22,14 +30,14 @@ section.home
   .home__wrapper
     ul.home__list
 
-      +template('ffmag', '54 Magazine', 'left', '01', 'African culture & lifestyle publication')
-      +template('sazy', 'Sazy', 'right', '02', 'Modern furniture and homeware branding')
-      +template('popeyes', 'Popeyes', 'left', '03', 'Bold UK launch visuals for fried chicken chain')
-      +template('spotify', 'Spotify', 'right', '04', 'Brand identity + UI for Wrapped campaign')
-      //- +template('boxpark', 'Boxpark', 'left', '05', 'Retail & food park brand refresh')
-      +template('turning-tide', 'Turning Tide', 'right', '05', 'Sustainable living awareness campaign')
-      +template('idris-elba', 'Porte Noire', 'right', '06', 'Visual direction for Porte Noire wine label')
-      +template('stoli', 'Stoli Vodka', 'left', '07', 'Heritage vodka brand with modern twist')
-      +template('ocb', 'Old Compton', 'right', '08', 'Visual identity for London restaurant')
-      +template('jack-daniels', 'Jack Daniels', 'left', '09', 'Experimental visuals for heritage brand')
-      +template('inbound', 'Ripple+', 'right', '10', 'Event branding + digital materials')
+      +template('ffmag', '54 Magazine', 'left', '01', 'African culture & lifestyle publication', '2023', 'Editorial Design')
+      +template('sazy', 'Sazy', 'right', '02', 'Modern furniture and homeware branding', '2022', 'Branding')
+      +template('popeyes', 'Popeyes', 'left', '03', 'Bold UK launch visuals for fried chicken chain', '2021', 'Campaign Direction')
+      +template('spotify', 'Spotify', 'right', '04', 'Brand identity + UI for Wrapped campaign', '2020', 'Digital Product')
+      //- +template('boxpark', 'Boxpark', 'left', '05', 'Retail & food park brand refresh', '2021', 'Brand Refresh')
+      +template('turning-tide', 'Turning Tide', 'right', '05', 'Sustainable living awareness campaign', '2022', 'Environmental')
+      +template('idris-elba', 'Porte Noire', 'right', '06', 'Visual direction for Porte Noire wine label', '2023', 'Art Direction')
+      +template('stoli', 'Stoli Vodka', 'left', '07', 'Heritage vodka brand with modern twist', '2019', 'Packaging')
+      +template('ocb', 'Old Compton', 'right', '08', 'Visual identity for London restaurant', '2020', 'Hospitality Branding')
+      +template('jack-daniels', 'Jack Daniels', 'left', '09', 'Experimental visuals for heritage brand', '2018', 'Experimental')
+      +template('inbound', 'Ripple+', 'right', '10', 'Event branding + digital materials', '2021', 'Experiential')

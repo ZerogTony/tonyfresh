@@ -13,7 +13,7 @@ export default class ThreeSlider {
     this.homeList = homeList
     this.isMobile = Detection.isMobile()
     this.homeOffsetRatio = this.calculateHomeOffsetRatio()
-    this.homeBaseScale = this.isMobile ? 0.6 : 0.35
+    this.homeBaseScale = this.getHomeBaseScale()
 
     this.setSmoothingValues()
 
@@ -46,6 +46,12 @@ export default class ThreeSlider {
     this.waitForSettleRaf = null
     this.transitionCompletionPromise = null
     this.transitionCompletionResolver = null
+    this.transitionDirection = null
+    this.lastHomeBounds = null
+    this.lastCaseBounds = null
+    this.lastTransitionProjectId = null
+    this.returnedFromCaseProjectId = null
+    this.isReturningHome = false
 
     this.screen = {
       width: window.innerWidth,
@@ -81,7 +87,19 @@ export default class ThreeSlider {
 
     if (width <= 1024) return 0.04
     if (width <= 1200) return 0.05
-    return 0.06
+    if (width <= 1600) return 0.055
+    if (width <= 1920) return 0.07
+    return 0.08
+  }
+
+  getHomeBaseScale () {
+    if (this.isMobile) return 0.65
+
+    const width = window.innerWidth
+    if (width >= 1920) return 0.4
+    if (width >= 1440) return 0.42
+    if (width >= 1280) return 0.38
+    return 0.36
   }
 
   getViewportWorldDimensions () {
@@ -178,7 +196,19 @@ export default class ThreeSlider {
     const viewportHeight = 2 * Math.tan(fov / 2) * this.camera.position.z
     const viewportWidth = viewportHeight * this.camera.aspect
 
-    const widthFactor = window.innerWidth < 900 ? 0.9 : 0.5
+    const viewportWidthThresholdLarge = 1440
+    const viewportWidthThresholdMedium = 1200
+
+    let widthFactor = 0.6
+
+    if (window.innerWidth < 900) {
+      widthFactor = 0.9
+    } else if (window.innerWidth < viewportWidthThresholdMedium) {
+      widthFactor = 0.7
+    } else if (window.innerWidth >= viewportWidthThresholdLarge) {
+      widthFactor = 0.64
+    }
+
     const planeWidth = viewportWidth * widthFactor
     const planeHeight = planeWidth * (9 / 16)
 
@@ -382,6 +412,75 @@ export default class ThreeSlider {
     return { left: safeLeft, top: safeTop, width, height }
   }
 
+  getHomeTransitionBounds () {
+    const { width: viewportWidth, height: viewportHeight } = this.getViewportWorldDimensions()
+
+    const targetWorldWidth = this.initialPlaneDimensions.width * this.homeBaseScale
+    const targetWorldHeight = this.initialPlaneDimensions.height * this.homeBaseScale
+
+    const targetPixelWidth = (targetWorldWidth / viewportWidth) * this.screen.width
+    const targetPixelHeight = (targetWorldHeight / viewportHeight) * this.screen.height
+
+    const startLeft = (this.screen.width - targetPixelWidth) / 2
+    const startTop = (this.screen.height - targetPixelHeight) / 2
+    const offsetPx = this.screen.height * this.homeOffsetRatio
+
+    return {
+      left: startLeft,
+      top: startTop + offsetPx,
+      width: targetPixelWidth,
+      height: targetPixelHeight
+    }
+  }
+
+  calculateTransformForBounds (bounds) {
+    if (!bounds) return null
+
+    const { width: viewportWidth, height: viewportHeight } = this.getViewportWorldDimensions()
+
+    const targetWorldWidth = (bounds.width / this.screen.width) * viewportWidth
+    const targetWorldHeight = (bounds.height / this.screen.height) * viewportHeight
+
+    const targetScaleX = targetWorldWidth / this.initialPlaneDimensions.width
+    const targetScaleY = targetWorldHeight / this.initialPlaneDimensions.height
+
+    const targetPosX = -(viewportWidth / 2) + (targetWorldWidth / 2) + (bounds.left / this.screen.width) * viewportWidth
+    const targetPosY = (viewportHeight / 2) - (targetWorldHeight / 2) - (bounds.top / this.screen.height) * viewportHeight
+
+    return {
+      scaleX: targetScaleX,
+      scaleY: targetScaleY,
+      posX: targetPosX,
+      posY: targetPosY
+    }
+  }
+
+  applyBoundsToPlane (bounds, { lockScale = false } = {}) {
+    if (!this.plane || !bounds) return null
+
+    const transform = this.calculateTransformForBounds(bounds)
+    if (!transform) return null
+
+    GSAP.killTweensOf(this.plane.scale)
+    GSAP.killTweensOf(this.plane.position)
+
+    this.plane.scale.x = transform.scaleX
+    this.plane.scale.y = transform.scaleY
+    this.plane.scale.z = 1
+
+    this.plane.position.x = transform.posX
+    this.plane.position.y = transform.posY
+
+    if (lockScale) {
+      this.lockedScale = {
+        x: transform.scaleX,
+        y: transform.scaleY
+      }
+    }
+
+    return transform
+  }
+
   getSettleThreshold () {
     return this.stableThreshold
   }
@@ -448,6 +547,8 @@ export default class ThreeSlider {
     }
 
     this.pendingProjectId = projectId
+    this.returnedFromCaseProjectId = null
+    this.isReturningHome = false
     this.transitionCompletionPromise = new Promise(resolve => {
       this.transitionCompletionResolver = resolve
     })
@@ -537,10 +638,15 @@ export default class ThreeSlider {
 
     this.transitionTargetBounds = caseBounds
 
+    this.lastHomeBounds = this.transitionStartBounds ? { ...this.transitionStartBounds } : null
+    this.lastCaseBounds = caseBounds ? { ...caseBounds } : null
+    this.lastTransitionProjectId = projectId
+    this.transitionDirection = 'forward'
+
     // Create GSAP animation
     this.transitionTimeline = GSAP.timeline({
       onComplete: () => {
-        this.onTransitionComplete()
+        this.onTransitionComplete({ direction: 'forward', projectId })
       }
     })
 
@@ -552,27 +658,103 @@ export default class ThreeSlider {
 
     // Dispatch event so Home page can handle navigation
     window.dispatchEvent(new CustomEvent('sliderTransitionStart', {
-      detail: { projectId }
+      detail: { projectId, direction: 'forward' }
     }))
 
     return this.transitionCompletionPromise
   }
 
-  onTransitionComplete () {
-    console.log('Transition complete')
-    // Don't set isTransitioning = false here
-    // Let positionOnCaseHeader() do it after positioning is complete
+  onTransitionComplete ({ direction = 'forward', projectId = null } = {}) {
+    console.log('Transition complete', direction)
 
-    const completedProjectId = this.pendingProjectId
+    const completedProjectId = projectId || this.pendingProjectId || this.lastTransitionProjectId
+
+    if (this.transitionTimeline) {
+      this.transitionTimeline.kill()
+      this.transitionTimeline = null
+    }
+
+    if (direction === 'reverse') {
+      if (this.renderer && this.renderer.domElement) {
+        this.renderer.domElement.style.zIndex = '3'
+      }
+
+      this.transition = 0
+
+      if (this.plane && this.plane.material && this.plane.material.uniforms) {
+        this.plane.material.uniforms.uTransition.value = 0
+      }
+
+      if (this.plane) {
+        this.plane.scale.set(this.homeBaseScale, this.homeBaseScale, 1)
+        this.applyHomeBaseTransform()
+      }
+
+      const totalProjects = this.projects.length
+      if (totalProjects > 0) {
+        const resolvedIndex = this.projects.findIndex(project => project && project.id === completedProjectId)
+        if (resolvedIndex !== -1) {
+          this.scrollPosition = resolvedIndex
+          this.targetScrollPosition = resolvedIndex
+          this.currentProjectIndex = resolvedIndex
+          this.stableCurrentIndex = resolvedIndex
+          this.stableNextIndex = (resolvedIndex + 1) % totalProjects
+          this.lastEmittedProjectIndex = resolvedIndex
+
+          if (this.plane && this.plane.material && this.plane.material.uniforms) {
+            const { uniforms } = this.plane.material
+            uniforms.uCurrentTexture.value = this.textures[resolvedIndex] || uniforms.uCurrentTexture.value
+            uniforms.uNextTexture.value = this.textures[this.stableNextIndex] || uniforms.uNextTexture.value
+            uniforms.uScrollPosition.value = 0
+            uniforms.uTransition.value = 0
+          }
+        }
+      }
+
+      this.scrollIntensity = 0
+      this.targetScrollIntensity = 0
+      this.isMoving = false
+      this.isStable = true
+      this.transitionDirection = null
+      this.isReturningHome = false
+      this.returnedFromCaseProjectId = completedProjectId
+
+      this.isTransitioning = false
+      this.scrollLocked = false
+      this.lockedScale = null
+      this.transitionStartBounds = null
+      this.transitionTargetBounds = null
+      this.pendingProjectId = null
+
+      window.dispatchEvent(new CustomEvent('sliderTransitionComplete', {
+        detail: {
+          projectId: completedProjectId,
+          direction: 'reverse'
+        }
+      }))
+
+      this.resolveTransitionPromise({
+        projectId: completedProjectId,
+        direction: 'reverse'
+      })
+
+      return
+    }
 
     window.dispatchEvent(new CustomEvent('sliderTransitionComplete', {
       detail: {
-        projectId: completedProjectId
+        projectId: completedProjectId,
+        direction: 'forward'
       }
     }))
 
-    this.resolveTransitionPromise({ projectId: completedProjectId })
+    this.resolveTransitionPromise({
+      projectId: completedProjectId,
+      direction: 'forward'
+    })
+
     this.pendingProjectId = null
+    this.transitionDirection = null
   }
 
   updateTransition () {
@@ -611,6 +793,103 @@ export default class ThreeSlider {
     this.plane.material.uniforms.uTransition.value = this.transition
   }
 
+  async transitionBackToHome (projectId = null) {
+    if (this.transitionCompletionPromise) {
+      return this.transitionCompletionPromise
+    }
+
+    const targetProjectId =
+      projectId ||
+      this.pendingProjectId ||
+      this.lastTransitionProjectId ||
+      (this.projects[this.currentProjectIndex] ? this.projects[this.currentProjectIndex].id : null)
+
+    if (!targetProjectId) {
+      console.warn('[ThreeSlider] transitionBackToHome called without a valid project id')
+      return null
+    }
+
+    const caseBounds = this.getCaseBounds(targetProjectId)
+    if (!caseBounds) {
+      console.error('[ThreeSlider] Could not determine case bounds for reverse transition', targetProjectId)
+      return null
+    }
+
+    const homeBounds = this.lastHomeBounds || this.getHomeTransitionBounds()
+    if (!homeBounds) {
+      console.error('[ThreeSlider] Could not determine home bounds for reverse transition')
+      return null
+    }
+
+    if (this.transitionTimeline) {
+      this.transitionTimeline.kill()
+      this.transitionTimeline = null
+    }
+
+    this.transitionCompletionPromise = new Promise(resolve => {
+      this.transitionCompletionResolver = resolve
+    })
+
+    this.pendingProjectId = targetProjectId
+    this.isReturningHome = true
+    this.returnedFromCaseProjectId = null
+    this.lastTransitionProjectId = targetProjectId
+    this.lastCaseBounds = caseBounds ? { ...caseBounds } : null
+    this.lastHomeBounds = homeBounds ? { ...homeBounds } : null
+
+    this.transitionStartBounds = homeBounds
+    this.transitionTargetBounds = caseBounds
+    this.transition = 1
+
+    this.transitionDirection = 'reverse'
+    this.isTransitioning = true
+    this.scrollLocked = true
+
+    this.show()
+
+    if (this.renderer && this.renderer.domElement) {
+      this.renderer.domElement.style.visibility = 'visible'
+      this.renderer.domElement.style.opacity = '1'
+      this.renderer.domElement.style.zIndex = '1000'
+    }
+
+    this.applyBoundsToPlane(caseBounds, { lockScale: true })
+
+    if (this.plane && this.plane.material && this.plane.material.uniforms) {
+      this.plane.material.uniforms.uTransition.value = 1
+    }
+
+    // Ensure transition math starts from current state
+    this.updateTransition()
+
+    window.dispatchEvent(new CustomEvent('sliderTransitionStart', {
+      detail: {
+        projectId: targetProjectId,
+        direction: 'reverse'
+      }
+    }))
+
+    this.transitionTimeline = GSAP.timeline({
+      onComplete: () => {
+        this.onTransitionComplete({ direction: 'reverse', projectId: targetProjectId })
+      }
+    })
+
+    this.transitionTimeline.to(this, {
+      transition: 0,
+      duration: 1.1,
+      ease: 'expo.inOut'
+    })
+
+    return this.transitionCompletionPromise
+  }
+
+  consumeReturnedFromCaseProjectId () {
+    const projectId = this.returnedFromCaseProjectId
+    this.returnedFromCaseProjectId = null
+    return projectId
+  }
+
   onScroll (delta) {
     // Disable scroll during transition or when locked (on case page)
     if (this.isTransitioning || this.scrollLocked) return
@@ -645,7 +924,7 @@ export default class ThreeSlider {
     this.isMobile = Detection.isMobile()
     this.setSmoothingValues()
     this.homeOffsetRatio = this.calculateHomeOffsetRatio()
-    this.homeBaseScale = this.isMobile ? 0.6 : 0.35
+    this.homeBaseScale = this.getHomeBaseScale()
 
     this.screen.width = window.innerWidth
     this.screen.height = window.innerHeight
@@ -834,15 +1113,14 @@ export default class ThreeSlider {
   }
 
   positionOnCaseHeader (caseId) {
-    // Find the case media element
-    const caseMedia = document.querySelector(`#${caseId} .case__media`)
-    if (!caseMedia) {
-      console.error('Could not find case media element for', caseId)
+    const bounds = this.getCaseBounds(caseId)
+    if (!bounds) {
+      console.error('Could not find case bounds for', caseId)
       return
     }
 
-    // Get its bounds
-    const bounds = caseMedia.getBoundingClientRect()
+    this.lastCaseBounds = { ...bounds }
+    this.lastTransitionProjectId = caseId
 
     console.log('=== positionOnCaseHeader DEBUG ===')
     console.log('Case ID:', caseId)
@@ -860,26 +1138,15 @@ export default class ThreeSlider {
       this.renderer.domElement.style.overflow = 'visible'
     }
 
-    // Get viewport dimensions
-    const fov = this.camera.fov * (Math.PI / 180)
-    const viewportHeight = 2 * Math.tan(fov / 2) * this.camera.position.z
-    const viewportWidth = viewportHeight * this.camera.aspect
+    const transform = this.calculateTransformForBounds(bounds)
 
-    // Calculate scale to match case media size
-    const targetWorldWidth = (bounds.width / this.screen.width) * viewportWidth
-    const targetWorldHeight = (bounds.height / this.screen.height) * viewportHeight
+    if (!transform) {
+      console.error('Could not compute transform for case bounds', caseId)
+      return
+    }
 
-    const targetScaleX = targetWorldWidth / this.initialPlaneDimensions.width
-    const targetScaleY = targetWorldHeight / this.initialPlaneDimensions.height
-
-    console.log('Target plane scale:', targetScaleX, targetScaleY)
-
-    // Calculate final plane position to align with case media bounds inside the viewport
-    const targetPosX = -(viewportWidth / 2) + (targetWorldWidth / 2) + (bounds.left / this.screen.width) * viewportWidth
-    const targetPosY = (viewportHeight / 2) - (targetWorldHeight / 2) - (bounds.top / this.screen.height) * viewportHeight
-
-    console.log('Target plane position:', targetPosX, targetPosY)
-    console.log('Viewport:', viewportWidth, viewportHeight)
+    console.log('Target plane scale:', transform.scaleX, transform.scaleY)
+    console.log('Target plane position:', transform.posX, transform.posY)
 
     // Smoothly align plane to the case media
     GSAP.killTweensOf(this.plane.scale)
@@ -890,8 +1157,8 @@ export default class ThreeSlider {
     this.lockedScale = null
 
     GSAP.to(this.plane.scale, {
-      x: targetScaleX,
-      y: targetScaleY,
+      x: transform.scaleX,
+      y: transform.scaleY,
       duration: alignDuration,
       ease: 'power2.out',
       onUpdate: () => {
@@ -900,15 +1167,15 @@ export default class ThreeSlider {
       },
       onComplete: () => {
         this.lockedScale = {
-          x: targetScaleX,
-          y: targetScaleY
+          x: transform.scaleX,
+          y: transform.scaleY
         }
       }
     })
 
     GSAP.to(this.plane.position, {
-      x: targetPosX,
-      y: targetPosY,
+      x: transform.posX,
+      y: transform.posY,
       duration: alignDuration,
       ease: 'power2.out'
     })
@@ -970,6 +1237,12 @@ export default class ThreeSlider {
     this.transitionStartBounds = null
     this.transitionTargetBounds = null
     this.lockedScale = null
+    this.transitionDirection = null
+    this.lastHomeBounds = null
+    this.lastCaseBounds = null
+    this.lastTransitionProjectId = null
+    this.returnedFromCaseProjectId = null
+    this.isReturningHome = false
 
     // Ensure scroll uniforms are reset
     this.plane.material.uniforms.uTransition.value = 0

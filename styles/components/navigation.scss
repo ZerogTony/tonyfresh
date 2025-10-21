@@ -28,6 +28,13 @@ body:has(.intro--active) .navigation__background {
   pointer-events: none;
 }
 
+// Hide navigation background when home page is active
+body:has(.home--active) .navigation__background {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .navigation__list {
   
   @extend %cover;

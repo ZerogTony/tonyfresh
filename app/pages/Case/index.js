@@ -23,6 +23,13 @@ export default class extends Page {
 
     this.slider = slider;
     this.animatedDescriptions = new Set();
+    this.isReturningToWork = false;
+    this.backToWorkLink = null;
+    this.backToWorkListener = null;
+    this.exitFadeTimeline = null;
+    this.onBackToWorkClick = this.onBackToWorkClick.bind(this);
+    this.shaderOverrideActive = false;
+    this.lastShaderOverrideHex = null;
     this.create();
   }
 
@@ -207,61 +214,92 @@ export default class extends Page {
     // projectColor is set in changeBackgroundColor()
   }
 
-  updateBackgroundColorFade() {
-    if (!this.caseMedia || !this.canvas || !this.projectColor) return
+  rgbToHex (color) {
+    if (!color) return null
 
-    // Get the case header position
+    const clamp = value => Math.max(0, Math.min(255, Math.round(value)))
+    const toHex = value => clamp(value).toString(16).padStart(2, '0')
+
+    return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
+  }
+
+  updateShaderOverrideColor (color, { immediate = false } = {}) {
+    if (!color) return
+
+    const hex = this.rgbToHex(color)
+    if (!hex) return
+
+    if (!immediate && this.lastShaderOverrideHex === hex) return
+
+    this.lastShaderOverrideHex = hex
+
+    window.dispatchEvent(new CustomEvent('shaderOverride', {
+      detail: {
+        colors: {
+          color1: hex,
+          color2: hex,
+          color3: hex
+        },
+        immediate
+      }
+    }))
+
+    this.shaderOverrideActive = true
+  }
+
+  clearShaderOverride () {
+    if (!this.shaderOverrideActive) return
+
+    this.shaderOverrideActive = false
+    this.lastShaderOverrideHex = null
+
+    window.dispatchEvent(new CustomEvent('shaderOverrideClear'))
+  }
+
+  updateBackgroundColorFade() {
+    if (!this.caseMedia || !this.projectColor) return
+
     const caseHeader = this.elements.wrapper.querySelector('.case__header')
     if (!caseHeader) return
 
     const headerHeight = caseHeader.offsetHeight
-
-    // Start fading when the header is about to go off screen
-    // On mobile, account for smaller viewport
     const triggerPoint = headerHeight - (window.innerHeight * 0.3)
     const fadeDistance = 400
-
     const fadeStartScroll = this.scroll.current - triggerPoint
 
     let progress = 0
-
     if (fadeStartScroll < 0) {
-      // Before fade starts - use project color
-      this.canvas.background.r = this.projectColor.r
-      this.canvas.background.g = this.projectColor.g
-      this.canvas.background.b = this.projectColor.b
       progress = 0
     } else if (fadeStartScroll > fadeDistance) {
-      // After fade completes - use white
-      this.canvas.background.r = this.whiteColor.r
-      this.canvas.background.g = this.whiteColor.g
-      this.canvas.background.b = this.whiteColor.b
       progress = 1
     } else {
-      // During fade - interpolate between project color and white
       progress = fadeStartScroll / fadeDistance
-      this.canvas.background.r = this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress
-      this.canvas.background.g = this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress
-      this.canvas.background.b = this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress
     }
 
-    // Apply same fade to navigation background and canvas__background div
-    const r = Math.round(this.projectColor.r + (this.whiteColor.r - this.projectColor.r) * progress)
-    const g = Math.round(this.projectColor.g + (this.whiteColor.g - this.projectColor.g) * progress)
-    const b = Math.round(this.projectColor.b + (this.whiteColor.b - this.projectColor.b) * progress)
+    const whiteColor = this.whiteColor || { r: 248, g: 248, b: 248 }
+    const colorR = this.projectColor.r + (whiteColor.r - this.projectColor.r) * progress
+    const colorG = this.projectColor.g + (whiteColor.g - this.projectColor.g) * progress
+    const colorB = this.projectColor.b + (whiteColor.b - this.projectColor.b) * progress
+
+    if (this.canvas) {
+      this.canvas.background.r = colorR
+      this.canvas.background.g = colorG
+      this.canvas.background.b = colorB
+    }
+
+    const r = Math.round(colorR)
+    const g = Math.round(colorG)
+    const b = Math.round(colorB)
     const bgColor = `rgb(${r}, ${g}, ${b})`
+
+    this.updateShaderOverrideColor({ r, g, b })
 
     if (this.navBackground) {
       this.navBackground.style.setProperty('--nav-bg-color', bgColor)
       this.navBackground.style.background = bgColor
     }
 
-    // Shader background now renders behind; keep div transparent
-
-    // Fade navigation text color from white to black as background fades to white
     if (this.navLinks) {
-      // When progress is 0 (project color) = white text
-      // When progress is 1 (white background) = black text
       const textR = Math.round(255 - (255 * progress))
       const textG = Math.round(255 - (255 * progress))
       const textB = Math.round(255 - (255 * progress))
@@ -279,9 +317,12 @@ export default class extends Page {
     this.element.classList.add(this.classes.active)
 
     const id = url.replace('/case/', '').replace('/', '')
+    this.currentCaseId = id
 
     this.elements.wrapper = Array.from(this.elements.cases).find(item => item.id === id)
     this.elements.wrapper.classList.add(this.classes.caseActive)
+    this.elements.wrapper.style.opacity = '1'
+    this.elements.wrapper.style.removeProperty('pointer-events')
 
     const caseImage = this.elements.wrapper.querySelector('.case__media__image')
 
@@ -400,79 +441,156 @@ export default class extends Page {
   }
 
   setupBackToWorkHandler() {
+    if (this.backToWorkLink && this.backToWorkListener) {
+      this.backToWorkLink.removeEventListener('click', this.backToWorkListener)
+      this.backToWorkLink = null
+      this.backToWorkListener = null
+    }
+
+    if (!this.elements.wrapper) return
+
     const backLink = this.elements.wrapper.querySelector('.case__back')
-    
-    if (backLink) {
-      backLink.addEventListener('click', (e) => {
-        e.preventDefault()
-        this.fadeOutImagesAndNavigate()
-      })
+
+    if (!backLink) return
+
+    this.backToWorkLink = backLink
+    this.backToWorkListener = this.onBackToWorkClick
+    backLink.addEventListener('click', this.backToWorkListener)
+  }
+
+  async onBackToWorkClick (event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (this.isReturningToWork) return
+
+    this.isReturningToWork = true
+
+    window.dispatchEvent(new CustomEvent('lockScroll'))
+
+    try {
+      await this.scrollToTopForExit()
+
+      const projectId = this.currentCaseId || (this.elements.wrapper ? this.elements.wrapper.id : null)
+
+      const sliderPromise = this.startSliderReturnTransition(projectId)
+      const fadePromise = this.animateCaseExitFade()
+
+      const sliderAwaitable = sliderPromise && typeof sliderPromise.then === 'function'
+        ? sliderPromise
+        : Promise.resolve()
+      const fadeAwaitable = fadePromise && typeof fadePromise.then === 'function'
+        ? fadePromise
+        : Promise.resolve()
+
+      await Promise.all([sliderAwaitable, fadeAwaitable])
+
+      this.clearShaderOverride()
+
+      window.dispatchEvent(new CustomEvent('requestNavigation', {
+        detail: { url: '/home' }
+      }))
+    } catch (error) {
+      console.error('[Case] Error during back-to-work transition', error)
+      this.clearShaderOverride()
+      window.dispatchEvent(new CustomEvent('requestNavigation', {
+        detail: { url: '/home' }
+      }))
+    } finally {
+      this.isReturningToWork = false
     }
   }
 
-  fadeOutImagesAndNavigate() {
-    console.log('=== BACK TO WORK CLICKED ===')
-    console.log('Current scroll position:', this.scroll.current)
-    console.log('Scroll target:', this.scroll.target)
+  scrollToTopForExit () {
+    if (!this.scroll) return Promise.resolve()
 
-    // Directly animate both current and target for immediate fast scroll
-    GSAP.to(this.scroll, {
-      current: 0,
-      target: 0,
-      duration: 0.50,
-      ease: 'power2.inOut',
-      onUpdate: () => {
-        console.log('Scrolling... current position:', this.scroll.current, 'target:', this.scroll.target)
-      },
-      onComplete: () => {
-        console.log('🏁 Scroll animation complete, starting image fade...')
-        this.proceedWithNavigation()
-      }
+    return new Promise(resolve => {
+      GSAP.to(this.scroll, {
+        current: 0,
+        target: 0,
+        duration: 0.5,
+        ease: 'power2.inOut',
+        onComplete: resolve,
+        onInterrupt: resolve
+      })
     })
   }
 
-  proceedWithNavigation() {
-    console.log('🎬 Starting navigation transition...')
-
-    // Fade out images and navigate
-    const images = this.elements.wrapper.querySelectorAll('.case__gallery__media__image, .case__media__image')
-    console.log('Images found for fade out:', images.length)
-    console.log('Images:', images)
-    console.log('Current wrapper:', this.elements.wrapper)
-
-    if (images.length > 0) {
-      // Check current opacity of first image
-      console.log('Current opacity of first image:', window.getComputedStyle(images[0]).opacity)
-
-      GSAP.to(images, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.out',
-        stagger: 0.01,
-        onStart: () => {
-          console.log('🖼️ Starting image fade out...')
-        },
-        onUpdate: () => {
-          console.log('Fading images, first image opacity:', window.getComputedStyle(images[0]).opacity)
-        },
-        onComplete: () => {
-          console.log('✅ Image fade complete, navigating to home')
-          // Navigate to home after animation completes
-          window.history.pushState(null, null, '/home')
-          window.dispatchEvent(new PopStateEvent('popstate'))
-        }
-      })
-    } else {
-      console.log('⚠️ No images found, navigating immediately')
-      // If no images found, navigate immediately
-      window.history.pushState(null, null, '/home')
-      window.dispatchEvent(new PopStateEvent('popstate'))
+  startSliderReturnTransition (projectId) {
+    if (!this.slider || typeof this.slider.transitionBackToHome !== 'function') {
+      return Promise.resolve()
     }
+
+    const canvas = this.slider.renderer ? this.slider.renderer.domElement : null
+    const transitionPromise = this.slider.transitionBackToHome(projectId)
+
+    if (canvas) {
+      GSAP.fromTo(canvas, {
+        opacity: 0,
+        visibility: 'visible'
+      }, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'power2.out'
+      })
+    }
+
+    return transitionPromise || Promise.resolve()
+  }
+
+  animateCaseExitFade () {
+    if (!this.elements.wrapper) return Promise.resolve()
+
+    if (this.exitFadeTimeline) {
+      this.exitFadeTimeline.kill()
+      this.exitFadeTimeline = null
+    }
+
+    const wrapper = this.elements.wrapper
+    const heroImage = wrapper.querySelector('.case__media__image')
+    const galleryImages = wrapper.querySelectorAll('.case__gallery__media__image')
+
+    this.exitFadeTimeline = GSAP.timeline()
+
+    this.exitFadeTimeline.set(wrapper, { pointerEvents: 'none' })
+
+    if (heroImage) {
+      this.exitFadeTimeline.to(heroImage, {
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.inOut'
+      }, 0)
+    }
+
+    if (galleryImages && galleryImages.length > 0) {
+      this.exitFadeTimeline.to(galleryImages, {
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.inOut',
+        stagger: 0.04
+      }, 0)
+    }
+
+    this.exitFadeTimeline.to(wrapper, {
+      opacity: 0,
+      duration: 0.55,
+      ease: 'power2.inOut'
+    }, 0)
+
+    return new Promise(resolve => {
+      this.exitFadeTimeline.eventCallback('onComplete', () => {
+        this.exitFadeTimeline = null
+        resolve()
+      })
+
+      this.exitFadeTimeline.eventCallback('onInterrupt', () => {
+        this.exitFadeTimeline = null
+        resolve()
+      })
+    })
   }
 
   changeBackgroundColor (projectId) {
-    if (!this.canvas) return
-
     // Define project colors (same as Home page)
     const projectColors = {
       'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
@@ -489,12 +607,15 @@ export default class extends Page {
     }
 
     const targetColor = projectColors[projectId]
-    if (targetColor) {
-      console.log('Changing case page canvas background for project:', projectId, targetColor)
+    if (!targetColor) return
 
-      // Store this as the project color for fade animation
-      this.projectColor = { ...targetColor }
+    console.log('Changing case page canvas background for project:', projectId, targetColor)
 
+    // Store this as the project color for fade animation
+    this.projectColor = { ...targetColor }
+    this.updateShaderOverrideColor(targetColor, { immediate: true })
+
+    if (this.canvas) {
       // Animate canvas background color
       GSAP.to(this.canvas.background, {
         r: targetColor.r,
@@ -503,34 +624,48 @@ export default class extends Page {
         duration: 0.5,
         ease: 'power2.inOut'
       })
+    }
 
-      // Also animate navigation bar background to match
-      const navBackground = document.querySelector('.navigation__background')
-      if (navBackground) {
-        const navBackgroundColors = {
-          'sazy': 'rgb(220, 210, 200)',
-          'ffmag': 'rgb(131, 113, 95)',
-          'popeyes': 'rgb(147, 114, 132)',
-          'boxpark': 'rgb(255, 253, 60)',
-          'spotify': 'rgb(238, 238, 238)',
-          'stoli': 'rgb(255, 0, 66)',
-          'turning-tide': 'rgb(162, 138, 112)',
-          'idris-elba': 'rgb(0, 0, 0)',
-          'ocb': 'rgb(62, 90, 164)',
-          'jack-daniels': 'rgb(128, 128, 128)',
-          'inbound': 'rgb(253, 203, 71)',
-          'default': 'rgb(248, 248, 248)'
-        }
-
-        const targetNavColor = navBackgroundColors[projectId] || navBackgroundColors['default']
-        navBackground.style.background = targetNavColor
-        navBackground.style.setProperty('--nav-bg-color', targetNavColor)
+    // Also animate navigation bar background to match
+    const navBackground = document.querySelector('.navigation__background')
+    if (navBackground) {
+      const navBackgroundColors = {
+        'sazy': 'rgb(220, 210, 200)',
+        'ffmag': 'rgb(131, 113, 95)',
+        'popeyes': 'rgb(147, 114, 132)',
+        'boxpark': 'rgb(255, 253, 60)',
+        'spotify': 'rgb(238, 238, 238)',
+        'stoli': 'rgb(255, 0, 66)',
+        'turning-tide': 'rgb(162, 138, 112)',
+        'idris-elba': 'rgb(0, 0, 0)',
+        'ocb': 'rgb(62, 90, 164)',
+        'jack-daniels': 'rgb(128, 128, 128)',
+        'inbound': 'rgb(253, 203, 71)',
+        'default': 'rgb(248, 248, 248)'
       }
+
+      const targetNavColor = navBackgroundColors[projectId] || navBackgroundColors['default']
+      navBackground.style.background = targetNavColor
+      navBackground.style.setProperty('--nav-bg-color', targetNavColor)
     }
   }
 
   async hide (nextUrl) {
     this.scroll.target = 0
+    this.isReturningToWork = false
+    this.currentCaseId = null
+    this.clearShaderOverride()
+
+    if (this.backToWorkLink && this.backToWorkListener) {
+      this.backToWorkLink.removeEventListener('click', this.backToWorkListener)
+      this.backToWorkLink = null
+      this.backToWorkListener = null
+    }
+
+    if (this.exitFadeTimeline) {
+      this.exitFadeTimeline.kill()
+      this.exitFadeTimeline = null
+    }
 
     // Show the real case image before leaving (in case canvas was being used)
     if (this.elements.wrapper) {
@@ -610,4 +745,12 @@ export default class extends Page {
     this.updateBackgroundColorFade()
   }
 }
+
+
+
+
+
+
+
+
 

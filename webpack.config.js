@@ -8,7 +8,7 @@ const CnameWebpackPlugin = require('cname-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HTMLInlineCSSWebpackPlugin = require('html-inline-css-webpack-plugin').default
 
-const IS_DEVELOPMENT = process.env.NODE_ENV === 'dev'
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev'
 
 const dirApp = path.join(__dirname, 'app')
 const dirAssets = path.join(__dirname, 'assets')
@@ -64,10 +64,12 @@ module.exports = {
   ],
 
   output: {
-    filename: '[name].[contenthash].js'
+    filename: '[name].[contenthash].js',
+    clean: true
   },
 
   resolve: {
+    extensions: ['.js', '.jsx', '.json'],
     modules: [
       dirApp,
       dirAssets,
@@ -79,11 +81,7 @@ module.exports = {
     // CleanWebpackPlugin removed - was causing build output to be deleted
     
     new webpack.DefinePlugin({
-      IS_DEVELOPMENT
-    }),
-
-    new webpack.ProvidePlugin({
-
+      IS_DEVELOPMENT: JSON.stringify(IS_DEVELOPMENT)
     }),
 
     ...mapFolders,
@@ -92,30 +90,26 @@ module.exports = {
       domain: 'bizar.ro'
     }),
 
-    new CopyWebpackPlugin([
-      {
-        from: './app/service-worker.js',
-        to: ''
-      }
-    ]),
-
-    new CopyWebpackPlugin([
-      {
-        from: './offline',
-        to: 'offline'
-      }
-    ]),
-
-    new CopyWebpackPlugin([
-      {
-        from: './shared',
-        to: ''
-      }
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'app', 'service-worker.js'),
+          to: path.resolve(__dirname, 'public')
+        },
+        {
+          from: path.resolve(__dirname, 'offline'),
+          to: path.resolve(__dirname, 'public', 'offline')
+        },
+        {
+          from: path.resolve(__dirname, 'shared'),
+          to: path.resolve(__dirname, 'public')
+        }
+      ]
+    }),
 
     new MiniCssExtractPlugin({
-      filename: '[name].[hash].css',
-      chunkFilename: '[id].css'
+      filename: '[name].[contenthash].css',
+      chunkFilename: '[id].[contenthash].css'
     }),
 
     new HTMLInlineCSSWebpackPlugin()
@@ -129,7 +123,7 @@ module.exports = {
       },
 
       {
-        test: /\.js$/,
+        test: /\.(js|jsx)$/,
         use: {
           loader: 'babel-loader'
         }
@@ -142,19 +136,33 @@ module.exports = {
           {
             loader: 'css-loader',
             options: {
-              sourceMap: IS_DEVELOPMENT
+              sourceMap: IS_DEVELOPMENT,
+              importLoaders: 2
             }
           },
           {
             loader: 'postcss-loader',
             options: {
-              sourceMap: IS_DEVELOPMENT
+              sourceMap: IS_DEVELOPMENT,
+              postcssOptions: {
+                plugins: [
+                  ['autoprefixer']
+                ]
+              }
             }
           },
           {
             loader: 'sass-loader',
             options: {
-              sourceMap: IS_DEVELOPMENT
+              sourceMap: IS_DEVELOPMENT,
+              sassOptions: {
+                silenceDeprecations: [
+                  'legacy-js-api',
+                  'import',
+                  'division',
+                  'global-builtin'
+                ]
+              }
             }
           }
         ]
@@ -164,9 +172,10 @@ module.exports = {
         test: /\.(jpe?g|png|gif|svg|fnt|webp)$/,
         loader: 'file-loader',
         options: {
-          name (file) {
+          name () {
             return '[hash].[ext]'
-          }
+          },
+          esModule: false
         }
       },
 
@@ -174,9 +183,10 @@ module.exports = {
         test: /\.(woff2?|ttf)$/,
         loader: 'file-loader',
         options: {
-          name (file) {
+          name () {
             return '[name].[ext]'
-          }
+          },
+          esModule: false
         }
       },
 
