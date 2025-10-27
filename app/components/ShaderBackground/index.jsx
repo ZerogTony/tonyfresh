@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react'
 import * as reactSpring from '@react-spring/three'
+import ShaderBackgroundErrorBoundary from './ErrorBoundary'
 
 const DEFAULT_PROJECT_ID = 'ffmag'
 
@@ -387,6 +388,19 @@ function ShaderGradientPortal () {
   }, [overrideTarget, blendedProps, defaultColorProps])
 
   useEffect(() => {
+    if (!animatedColors) return
+    window.dispatchEvent(new CustomEvent('shaderActiveColors', {
+      detail: {
+        colors: {
+          color1: animatedColors.color1,
+          color2: animatedColors.color2,
+          color3: animatedColors.color3
+        }
+      }
+    }))
+  }, [animatedColors])
+
+  useEffect(() => {
     const handleOverride = (event) => {
       const detail = event.detail || {}
       const colors = detail.colors
@@ -476,7 +490,11 @@ export default class ShaderBackground {
     this.container.style.background = 'transparent'
     this.container.style.removeProperty('background-color')
     this.root = createRoot(this.rootElement)
-    this.root.render(<ShaderGradientPortal />)
+    this.root.render(
+      <ShaderBackgroundErrorBoundary>
+        <ShaderGradientPortal />
+      </ShaderBackgroundErrorBoundary>
+    )
   }
 
   destroy () {

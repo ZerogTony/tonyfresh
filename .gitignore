@@ -7,6 +7,19 @@ log/
 node_modules/
 bower_components/
 
+# Build output - Webpack generated files
+public/**/*.js
+public/**/*.hot-update.js
+public/**/*.hot-update.json
+public/**/*.map
+!public/service-worker.js
+build.log
+bundle-stats.json
+
+# Keep only the final production bundle if needed
+# Uncomment the line below to keep a production bundle
+# !public/bundle.js
+
 # Files.
 result.xml
 npm-debug.log
