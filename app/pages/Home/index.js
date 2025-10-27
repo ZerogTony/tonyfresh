@@ -1010,6 +1010,7 @@ export default class extends Page {
       return
     }
 
+    this.suppressProjectAnimations = false
     this.activateProject(projectId)
   }
 

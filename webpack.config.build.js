@@ -14,11 +14,12 @@ module.exports = merge(config, {
   devtool: false,
 
   plugins: [
-    // Bundle analyzer - set ANALYZE=true to generate report
-    // Usage: ANALYZE=true npm run build
+    // Bundle analyzer - generates visual report of bundle composition
+    // Usage: npm run build:analyze
     new BundleAnalyzerPlugin({
-      analyzerMode: process.env.ANALYZE === 'true' ? 'server' : 'disabled',
-      openAnalyzer: true,
+      analyzerMode: process.env.ANALYZE === 'true' ? 'static' : 'disabled',
+      reportFilename: 'bundle-report.html',
+      openAnalyzer: false,
       generateStatsFile: true,
       statsFilename: 'bundle-stats.json'
     })

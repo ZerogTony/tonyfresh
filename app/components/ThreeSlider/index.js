@@ -76,10 +76,10 @@ export default class ThreeSlider {
     this.scrollPositionSmoothness = isMobile ? 0.12 : 0.09
     this.settleSmoothness = isMobile ? 0.14 : 0.12
     this.scrollDamping = isMobile ? 0.9 : 0.92
-    this.scrollStopEpsilon = isMobile ? 0.0008 : 0.0006
-    this.stableThreshold = isMobile ? 0.012 : 0.01
-    this.targetSettleSmoothness = isMobile ? 0.18 : 0.16
-    this.targetSnapEpsilon = isMobile ? 0.0009 : 0.0007
+    this.scrollStopEpsilon = isMobile ? 0.0012 : 0.001
+    this.stableThreshold = isMobile ? 0.016 : 0.014
+    this.targetSettleSmoothness = isMobile ? 0.26 : 0.22
+    this.targetSnapEpsilon = isMobile ? 0.0015 : 0.0012
   }
 
   calculateHomeOffsetRatio () {

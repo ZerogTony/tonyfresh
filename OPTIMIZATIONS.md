@@ -58,14 +58,19 @@ new BundleAnalyzerPlugin({
 
 ### Usage
 ```bash
-ANALYZE=true npm run build
+npm run build:analyze
 ```
+
+This generates two files in the `public/` folder:
+- **public/bundle-report.html** - Interactive visual treemap (open in browser)
+- **public/bundle-stats.json** - Raw statistics for CI/CD integration
 
 ### Impact
 - Visualize bundle size and composition
 - Identify optimization opportunities
 - Track bundle size over time
 - Find duplicate dependencies
+- Pinpoint which libraries are taking up the most space
 
 ---
 
@@ -148,7 +153,7 @@ When shader fails:
 - Time to Interactive: ~2-3s on 3G (-50%)
 - Lighthouse Performance: ~75-85 (+15 points)
 
-*Run `ANALYZE=true npm run build` to see actual metrics*
+*Run `npm run build:analyze` to see actual metrics*
 
 ---
 
@@ -177,7 +182,7 @@ Before deploying, test on:
 
 ```bash
 # Analyze bundle size
-ANALYZE=true npm run build
+npm run build:analyze
 
 # Check what's in git staging
 git status

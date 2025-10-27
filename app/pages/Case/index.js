@@ -27,10 +27,20 @@ export default class extends Page {
     this.backToWorkLink = null;
     this.backToWorkListener = null;
     this.exitFadeTimeline = null;
-    this.onBackToWorkClick = this.onBackToWorkClick.bind(this);
     this.shaderOverrideActive = false;
     this.lastShaderOverrideHex = null;
+    this.onBackToWorkClick = this.onBackToWorkClick.bind(this);
+    this.currentShaderColors = null;
+    this.canvasBackgroundOverlay = null;
+    this.onShaderActiveColors = this.onShaderActiveColors.bind(this);
+    window.addEventListener('shaderActiveColors', this.onShaderActiveColors);
     this.create();
+  }
+
+  onShaderActiveColors (event) {
+    const colors = event?.detail?.colors
+    if (!colors) return
+    this.currentShaderColors = colors
   }
 
   splitTextIntoLines(element) {
@@ -212,48 +222,82 @@ export default class extends Page {
     this.navLinks = document.querySelectorAll('.navigation a, .navigation button')
     this.whiteColor = { r: 248, g: 248, b: 248 }
     // projectColor is set in changeBackgroundColor()
+    this.ensureBackgroundOverlay()
   }
 
-  rgbToHex (color) {
-    if (!color) return null
+  ensureBackgroundOverlay () {
+    if (!this.canvasBackgroundElement) return null
 
-    const clamp = value => Math.max(0, Math.min(255, Math.round(value)))
-    const toHex = value => clamp(value).toString(16).padStart(2, '0')
+    const existing = this.canvasBackgroundOverlay
+    if (existing && existing.parentNode === this.canvasBackgroundElement) {
+      return existing
+    }
 
-    return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
+    let overlay = this.canvasBackgroundElement.querySelector('.canvas__background__case-overlay')
+
+    if (!overlay) {
+      overlay = document.createElement('div')
+      overlay.className = 'canvas__background__case-overlay'
+      overlay.style.position = 'absolute'
+      overlay.style.top = '0'
+      overlay.style.left = '0'
+      overlay.style.width = '100%'
+      overlay.style.height = '100%'
+      overlay.style.pointerEvents = 'none'
+      overlay.style.zIndex = '4'
+      overlay.style.background = 'rgb(248, 248, 248)'
+      overlay.style.opacity = '0'
+      overlay.style.transition = 'opacity 0.35s ease-out'
+      this.canvasBackgroundElement.appendChild(overlay)
+    }
+
+    this.canvasBackgroundOverlay = overlay
+    return overlay
   }
 
-  updateShaderOverrideColor (color, { immediate = false } = {}) {
-    if (!color) return
+  hexToRgb (hex) {
+    if (!hex) return null
 
-    const hex = this.rgbToHex(color)
-    if (!hex) return
+    const normalized = hex.startsWith('#') ? hex.slice(1) : hex
+    if (normalized.length !== 6) return null
 
-    if (!immediate && this.lastShaderOverrideHex === hex) return
-
-    this.lastShaderOverrideHex = hex
-
-    window.dispatchEvent(new CustomEvent('shaderOverride', {
-      detail: {
-        colors: {
-          color1: hex,
-          color2: hex,
-          color3: hex
-        },
-        immediate
-      }
-    }))
-
-    this.shaderOverrideActive = true
+    const value = parseInt(normalized, 16)
+    return {
+      r: (value >> 16) & 255,
+      g: (value >> 8) & 255,
+      b: value & 255
+    }
   }
 
   clearShaderOverride () {
-    if (!this.shaderOverrideActive) return
+    if (this.shaderOverrideActive) {
+      this.shaderOverrideActive = false
+      this.lastShaderOverrideHex = null
+      window.dispatchEvent(new CustomEvent('shaderOverrideClear'))
+    }
 
-    this.shaderOverrideActive = false
-    this.lastShaderOverrideHex = null
+    if (this.canvasBackgroundOverlay) {
+      this.canvasBackgroundOverlay.style.transition = 'opacity 0.35s ease-out'
+      this.canvasBackgroundOverlay.style.opacity = '0'
+    }
 
-    window.dispatchEvent(new CustomEvent('shaderOverrideClear'))
+    if (this.canvasBackgroundElement) {
+      this.canvasBackgroundElement.style.removeProperty('opacity')
+      this.canvasBackgroundElement.style.removeProperty('transition')
+    }
+
+    const navBackground = document.querySelector('.navigation__background')
+    if (navBackground) {
+      const defaultColor = 'rgb(248, 248, 248)'
+      navBackground.style.background = defaultColor
+      navBackground.style.setProperty('--nav-bg-color', defaultColor)
+    }
+
+    if (this.navLinks) {
+      this.navLinks.forEach(link => {
+        link.style.color = '#2c2c2c'
+      })
+    }
   }
 
   updateBackgroundColorFade() {
@@ -276,23 +320,27 @@ export default class extends Page {
       progress = fadeStartScroll / fadeDistance
     }
 
-    const whiteColor = this.whiteColor || { r: 248, g: 248, b: 248 }
-    const colorR = this.projectColor.r + (whiteColor.r - this.projectColor.r) * progress
-    const colorG = this.projectColor.g + (whiteColor.g - this.projectColor.g) * progress
-    const colorB = this.projectColor.b + (whiteColor.b - this.projectColor.b) * progress
+    const clampedProgress = Math.max(0, Math.min(1, progress))
 
-    if (this.canvas) {
-      this.canvas.background.r = colorR
-      this.canvas.background.g = colorG
-      this.canvas.background.b = colorB
+    const overlay = this.canvasBackgroundOverlay || this.ensureBackgroundOverlay()
+    if (overlay) {
+      overlay.style.opacity = `${clampedProgress}`
     }
+
+    const whiteColor = this.whiteColor || { r: 248, g: 248, b: 248 }
+    const baseColor = this.projectColor || whiteColor
+    const colorR = baseColor.r + (whiteColor.r - baseColor.r) * clampedProgress
+    const colorG = baseColor.g + (whiteColor.g - baseColor.g) * clampedProgress
+    const colorB = baseColor.b + (whiteColor.b - baseColor.b) * clampedProgress
 
     const r = Math.round(colorR)
     const g = Math.round(colorG)
     const b = Math.round(colorB)
     const bgColor = `rgb(${r}, ${g}, ${b})`
 
-    this.updateShaderOverrideColor({ r, g, b })
+    if (overlay) {
+      overlay.style.background = bgColor
+    }
 
     if (this.navBackground) {
       this.navBackground.style.setProperty('--nav-bg-color', bgColor)
@@ -300,12 +348,8 @@ export default class extends Page {
     }
 
     if (this.navLinks) {
-      const textR = Math.round(255 - (255 * progress))
-      const textG = Math.round(255 - (255 * progress))
-      const textB = Math.round(255 - (255 * progress))
-
       this.navLinks.forEach(link => {
-        link.style.color = `rgb(${textR}, ${textG}, ${textB})`
+        link.style.color = '#2c2c2c'
       })
     }
   }
@@ -365,6 +409,7 @@ export default class extends Page {
 
     // Setup background color fade
     this.setupBackgroundColorFade()
+    this.updateBackgroundColorFade()
 
     // Handle slider transition if coming from home page
     if (this.slider && this.slider.isTransitioning) {
@@ -591,62 +636,69 @@ export default class extends Page {
   }
 
   changeBackgroundColor (projectId) {
-    // Define project colors (same as Home page)
-    const projectColors = {
-      'sazy': { r: 220, g: 210, b: 200 }, // much lighter brown
-      'ffmag': { r: 131, g: 113, b: 95 }, // #83715f
-      'popeyes': { r: 147, g: 114, b: 132 }, // #937284
-      'boxpark': { r: 255, g: 253, b: 60 }, // #fffd3c
-      'spotify': { r: 238, g: 238, b: 238 }, // #eeeeee
-      'stoli': { r: 255, g: 0, b: 66 }, // #ff0042
-      'turning-tide': { r: 162, g: 138, b: 112 }, // #a28a70
-      'idris-elba': { r: 0, g: 0, b: 0 }, // black
-      'ocb': { r: 62, g: 90, b: 164 }, // #3e5aa4
-      'jack-daniels': { r: 128, g: 128, b: 128 }, // grey
-      'inbound': { r: 253, g: 203, b: 71 } // #fdcb47
+    const fallbackHexColors = {
+      'sazy': '#3e5aa4',
+      'ffmag': '#83715f',
+      'popeyes': '#937284',
+      'boxpark': '#fffd3c',
+      'spotify': '#eeeeee',
+      'stoli': '#ff0042',
+      'turning-tide': '#a28a70',
+      'idris-elba': '#000000',
+      'ocb': '#dcd2c8',
+      'jack-daniels': '#808080',
+      'inbound': '#fdcb47',
+      'default': '#f8f8f8'
     }
 
-    const targetColor = projectColors[projectId]
-    if (!targetColor) return
+    let shaderHex = this.currentShaderColors?.color2 || this.currentShaderColors?.color1
+    const fallbackHex = fallbackHexColors[projectId] || fallbackHexColors.default
 
-    console.log('Changing case page canvas background for project:', projectId, targetColor)
+    if (!shaderHex && fallbackHex) {
+      const normalizedFallback = fallbackHex.toLowerCase()
+      if (!this.shaderOverrideActive || this.lastShaderOverrideHex !== normalizedFallback) {
+        window.dispatchEvent(new CustomEvent('shaderOverride', {
+          detail: {
+            colors: {
+              color1: fallbackHex,
+              color2: fallbackHex,
+              color3: fallbackHex
+            },
+            immediate: true
+          }
+        }))
+        this.shaderOverrideActive = true
+        this.lastShaderOverrideHex = normalizedFallback
+      }
+      shaderHex = normalizedFallback
+    } else if (shaderHex) {
+      this.lastShaderOverrideHex = null
+    }
 
-    // Store this as the project color for fade animation
+    const targetColor = this.hexToRgb(shaderHex) || this.hexToRgb(fallbackHex) || { r: 248, g: 248, b: 248 }
+
+    console.log('Case page background initial colour for project:', projectId, targetColor)
+
     this.projectColor = { ...targetColor }
-    this.updateShaderOverrideColor(targetColor, { immediate: true })
 
-    if (this.canvas) {
-      // Animate canvas background color
-      GSAP.to(this.canvas.background, {
-        r: targetColor.r,
-        g: targetColor.g,
-        b: targetColor.b,
-        duration: 0.5,
-        ease: 'power2.inOut'
-      })
+    const overlay = this.ensureBackgroundOverlay()
+    if (overlay) {
+      overlay.style.transition = 'opacity 0.35s ease-out'
+      overlay.style.opacity = '0'
+      overlay.style.background = `rgb(${targetColor.r}, ${targetColor.g}, ${targetColor.b})`
     }
 
-    // Also animate navigation bar background to match
     const navBackground = document.querySelector('.navigation__background')
     if (navBackground) {
-      const navBackgroundColors = {
-        'sazy': 'rgb(220, 210, 200)',
-        'ffmag': 'rgb(131, 113, 95)',
-        'popeyes': 'rgb(147, 114, 132)',
-        'boxpark': 'rgb(255, 253, 60)',
-        'spotify': 'rgb(238, 238, 238)',
-        'stoli': 'rgb(255, 0, 66)',
-        'turning-tide': 'rgb(162, 138, 112)',
-        'idris-elba': 'rgb(0, 0, 0)',
-        'ocb': 'rgb(62, 90, 164)',
-        'jack-daniels': 'rgb(128, 128, 128)',
-        'inbound': 'rgb(253, 203, 71)',
-        'default': 'rgb(248, 248, 248)'
-      }
+      const navColor = `rgb(${targetColor.r}, ${targetColor.g}, ${targetColor.b})`
+      navBackground.style.background = navColor
+      navBackground.style.setProperty('--nav-bg-color', navColor)
+    }
 
-      const targetNavColor = navBackgroundColors[projectId] || navBackgroundColors['default']
-      navBackground.style.background = targetNavColor
-      navBackground.style.setProperty('--nav-bg-color', targetNavColor)
+    if (this.navLinks) {
+      this.navLinks.forEach(link => {
+        link.style.color = '#2c2c2c'
+      })
     }
   }
 
@@ -743,6 +795,11 @@ export default class extends Page {
 
     // Update background color fade based on scroll
     this.updateBackgroundColorFade()
+  }
+
+  destroy () {
+    window.removeEventListener('shaderActiveColors', this.onShaderActiveColors)
+    super.destroy()
   }
 }
 

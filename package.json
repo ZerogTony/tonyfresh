@@ -4,6 +4,7 @@
   "scripts": {
     "start": "npm run development",
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.build.js --progress",
+    "build:analyze": "cross-env NODE_ENV=production ANALYZE=true webpack --config webpack.config.build.js --progress",
     "development": "cross-env NODE_ENV=development webpack serve --config webpack.config.development.js --progress",
     "lint": "eslint --config .eslintrc.js *.js",
     "deploy": "cross-env git subtree push --prefix public origin gh-pages"

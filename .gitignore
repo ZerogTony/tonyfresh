@@ -14,7 +14,8 @@ public/**/*.hot-update.json
 public/**/*.map
 !public/service-worker.js
 build.log
-bundle-stats.json
+public/bundle-stats.json
+public/bundle-report.html
 
 # Keep only the final production bundle if needed
 # Uncomment the line below to keep a production bundle
