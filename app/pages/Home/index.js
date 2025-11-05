@@ -44,8 +44,8 @@ export default class extends Page {
     this.cardCollapseTimeline = null
     this.isCardOpen = false
     this.suppressProjectAnimations = false
-    this.touchScrollMultiplier = this.isMobile ? 2.6 : 2
-    this.touchMovementThreshold = 6
+    this.touchScrollMultiplier = this.isMobile ? 3.4 : 2
+    this.touchMovementThreshold = this.isMobile ? 3 : 6
     this.touchState = {
       active: false,
       startX: 0,
@@ -172,7 +172,13 @@ export default class extends Page {
     // Only reset background and text colors if NOT going to a case page
     const isGoingToCasePage = nextUrl && nextUrl.indexOf('/case') > -1
     
-    if (!isGoingToCasePage) {
+    if (isGoingToCasePage) {
+      const navBgElement = document.querySelector('.navigation__background')
+      if (navBgElement) {
+        navBgElement.style.opacity = '0'
+        navBgElement.style.visibility = 'hidden'
+      }
+    } else {
       // Reset canvas background to default
       if (this.elements.canvasBackground) {
         GSAP.to(this.elements.canvasBackground, {

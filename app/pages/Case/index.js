@@ -26,6 +26,9 @@ export default class extends Page {
     this.isReturningToWork = false;
     this.backToWorkLink = null;
     this.backToWorkListener = null;
+    this.navWorkLink = null;
+    this.navWorkListenerAttached = false;
+    this.navWorkOriginalOnClick = null;
     this.exitFadeTimeline = null;
     this.shaderOverrideActive = false;
     this.lastShaderOverrideHex = null;
@@ -416,6 +419,7 @@ export default class extends Page {
 
     // Setup back to work link handler
     this.setupBackToWorkHandler()
+    this.setupNavigationWorkHandler()
 
     // Animate case title with GSAP
     this.animateCaseTitle()
@@ -516,9 +520,39 @@ export default class extends Page {
     backLink.addEventListener('click', this.backToWorkListener)
   }
 
+  setupNavigationWorkHandler() {
+    const navLink = document.querySelector('.navigation__link[href="/home"]')
+    if (!navLink) return
+
+    if (this.navWorkListenerAttached && this.navWorkLink === navLink) {
+      return
+    }
+
+    if (this.navWorkLink && this.navWorkListenerAttached) {
+      this.navWorkLink.removeEventListener('click', this.onBackToWorkClick)
+      this.navWorkListenerAttached = false
+      if (this.navWorkLink && this.navWorkOriginalOnClick) {
+        this.navWorkLink.onclick = this.navWorkOriginalOnClick
+      }
+    }
+
+    this.navWorkLink = navLink
+    if (this.navWorkOriginalOnClick === null) {
+      this.navWorkOriginalOnClick = navLink.onclick || null
+    }
+    if (this.navWorkOriginalOnClick) {
+      navLink.onclick = null
+    }
+    this.navWorkLink.addEventListener('click', this.onBackToWorkClick)
+    this.navWorkListenerAttached = true
+  }
+
   async onBackToWorkClick (event) {
     event.preventDefault()
     event.stopPropagation()
+    if (event.stopImmediatePropagation) {
+      event.stopImmediatePropagation()
+    }
 
     if (this.isReturningToWork) return
 
@@ -720,6 +754,15 @@ export default class extends Page {
       this.backToWorkListener = null
     }
 
+    if (this.navWorkLink && this.navWorkListenerAttached) {
+      this.navWorkLink.removeEventListener('click', this.onBackToWorkClick)
+      if (this.navWorkOriginalOnClick) {
+        this.navWorkLink.onclick = this.navWorkOriginalOnClick
+      }
+      this.navWorkListenerAttached = false
+    }
+    this.navWorkLink = null
+
     if (this.exitFadeTimeline) {
       this.exitFadeTimeline.kill()
       this.exitFadeTimeline = null
@@ -812,6 +855,19 @@ export default class extends Page {
 
   destroy () {
     window.removeEventListener('shaderActiveColors', this.onShaderActiveColors)
+    if (this.navWorkLink && this.navWorkListenerAttached) {
+      this.navWorkLink.removeEventListener('click', this.onBackToWorkClick)
+      if (this.navWorkOriginalOnClick) {
+        this.navWorkLink.onclick = this.navWorkOriginalOnClick
+      }
+      this.navWorkLink = null
+      this.navWorkListenerAttached = false
+    } else if (!this.navWorkLink && this.navWorkOriginalOnClick) {
+      const navLink = document.querySelector('.navigation__link[href="/home"]')
+      if (navLink) {
+        navLink.onclick = this.navWorkOriginalOnClick
+      }
+    }
     super.destroy()
   }
 }

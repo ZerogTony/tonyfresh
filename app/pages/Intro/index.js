@@ -56,7 +56,17 @@ export default class extends Page {
     this.splitTextElements(".intro__outro-title h1");
     this.splitTextElements(".intro__tag p", "words");
 
-    const isMobile = window.innerWidth <= 1000;
+    const viewportWidth = window.innerWidth;
+    const isMobile = viewportWidth <= 1000;
+    const isPhone = viewportWidth <= 600;
+
+    const phoneTargetFontPx = Math.min(viewportWidth * 0.22, 48);
+    const phoneInitialFontPx = Math.max(phoneTargetFontPx * 0.85, 34);
+
+    const outroInitialX = isPhone ? '-3rem' : (isMobile ? '-3rem' : '-8rem');
+    const outroInitialFontSize = isPhone ? `${phoneInitialFontPx}px` : (isMobile ? '6rem' : '14rem');
+    const outroTargetX = isPhone ? '-6rem' : (isMobile ? '-6rem' : '-15rem');
+    const outroTargetFontSize = isPhone ? `${phoneTargetFontPx}px` : (isMobile ? '6rem' : '14rem');
 
     // Set initial states
     GSAP.set(
@@ -75,8 +85,8 @@ export default class extends Page {
     });
 
     GSAP.set(".intro__split-overlay .intro__outro-title .char", {
-      x: isMobile ? "-3rem" : "-8rem",
-      fontSize: isMobile ? "6rem" : "14rem",
+      x: outroInitialX,
+      fontSize: outroInitialFontSize,
       fontWeight: "500",
     });
 
@@ -158,7 +168,7 @@ export default class extends Page {
       .to(
         ".intro__preloader .intro__outro-title .char",
         {
-          x: isMobile ? "-6rem" : "-15rem",
+          x: outroTargetX,
           duration: 1,
         },
         5
@@ -166,7 +176,7 @@ export default class extends Page {
       .to(
         ".intro__preloader .intro__outro-title .char",
         {
-          fontSize: isMobile ? "6rem" : "14rem",
+          fontSize: outroTargetFontSize,
           fontWeight: "500",
           duration: 0.75,
           onComplete: () => {

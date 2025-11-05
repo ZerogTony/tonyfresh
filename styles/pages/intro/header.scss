@@ -106,13 +106,13 @@
   }
 
   @include media('<=phone') {
-    font-size: 5rem;
+    font-size: clamp(3rem, 10vw, 3.6rem);
     text-align: left; /* Align to left on mobile */
     width: 100%;
   }
 
   @include media('<=320px') {
-    font-size: 4rem;
+    font-size: clamp(2.8rem, 11vw, 3.2rem);
   }
 }
 

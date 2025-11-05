@@ -95,6 +95,7 @@
   top: 50%;
   left: calc(50% + 15rem);
   transform: translate(-50%, -50%);
+  white-space: nowrap;
 
   @include media('<=1000px') {
     left: calc(50% + 6rem);
@@ -131,6 +132,7 @@
   position: relative;
   display: inline-block;
   overflow: hidden;
+  letter-spacing: -0.02em;
 }
 
 .intro__intro-title .char,
