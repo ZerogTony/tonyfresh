@@ -14,7 +14,7 @@ export default class extends Component {
     this.isMobile = Detection.isMobile()
 
     // Faster ease on mobile for better responsiveness
-    const baseEase = this.isMobile ? 0.08 : 0.04
+    const baseEase = this.isMobile ? 0.12 : 0.06
 
     this.scroll = {
       ease: baseEase,

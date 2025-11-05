@@ -223,6 +223,12 @@ export default class extends Page {
     this.whiteColor = { r: 248, g: 248, b: 248 }
     // projectColor is set in changeBackgroundColor()
     this.ensureBackgroundOverlay()
+
+    if (this.navBackground) {
+      this.navBackground.style.background = 'rgb(248, 248, 248)'
+      this.navBackground.style.opacity = '0'
+      this.navBackground.style.visibility = 'hidden'
+    }
   }
 
   ensureBackgroundOverlay () {
@@ -290,7 +296,8 @@ export default class extends Page {
     if (navBackground) {
       const defaultColor = 'rgb(248, 248, 248)'
       navBackground.style.background = defaultColor
-      navBackground.style.setProperty('--nav-bg-color', defaultColor)
+      navBackground.style.opacity = '1'
+      navBackground.style.visibility = 'visible'
     }
 
     if (this.navLinks) {
@@ -343,8 +350,14 @@ export default class extends Page {
     }
 
     if (this.navBackground) {
-      this.navBackground.style.setProperty('--nav-bg-color', bgColor)
-      this.navBackground.style.background = bgColor
+      const opacity = clampedProgress
+      this.navBackground.style.opacity = `${opacity}`
+      if (opacity <= 0.001) {
+        this.navBackground.style.visibility = 'hidden'
+      } else {
+        this.navBackground.style.visibility = 'visible'
+      }
+      this.navBackground.style.background = 'rgb(248, 248, 248)'
     }
 
     if (this.navLinks) {
@@ -688,13 +701,6 @@ export default class extends Page {
       overlay.style.background = `rgb(${targetColor.r}, ${targetColor.g}, ${targetColor.b})`
     }
 
-    const navBackground = document.querySelector('.navigation__background')
-    if (navBackground) {
-      const navColor = `rgb(${targetColor.r}, ${targetColor.g}, ${targetColor.b})`
-      navBackground.style.background = navColor
-      navBackground.style.setProperty('--nav-bg-color', navColor)
-    }
-
     if (this.navLinks) {
       this.navLinks.forEach(link => {
         link.style.color = '#2c2c2c'
@@ -740,6 +746,11 @@ export default class extends Page {
     // Only reset background and navigation to default when NOT going back to home page
     const isGoingToHome = nextUrl && nextUrl === '/home'
 
+    if (isGoingToHome && this.navBackground) {
+      this.navBackground.style.opacity = '0'
+      this.navBackground.style.visibility = 'hidden'
+    }
+
     if (!isGoingToHome) {
       // Reset canvas background and navigation to default when leaving case page
       if (this.canvas) {
@@ -753,12 +764,14 @@ export default class extends Page {
       }
 
       // Reset navigation bar background to default
-      const navElement = document.querySelector('.navigation')
-      if (navElement) {
-        GSAP.to(navElement, {
-          '--nav-bg-color': 'rgb(248, 248, 248)',
-          duration: 0.5,
-          ease: 'power2.inOut'
+      const navBg = document.querySelector('.navigation__background')
+      if (navBg) {
+        navBg.style.background = 'rgb(248, 248, 248)'
+        navBg.style.visibility = 'visible'
+        GSAP.to(navBg, {
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out'
         })
       }
     }

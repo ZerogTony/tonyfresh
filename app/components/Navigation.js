@@ -47,7 +47,6 @@ export default class extends Component {
     console.log('onEasterEgg method called!')
     console.log('Current isOriginalBackground state:', this.isOriginalBackground)
     
-    const offWhite = '#fef6ec'
     const offBlack = '#111111'
     const offWhiteText = '#000000' // original text color
     const offBlackText = '#f8f8f8' // dark theme text color
@@ -85,16 +84,6 @@ export default class extends Component {
         this.elements.easter.style.backgroundColor = offBlackText // Light color for dark background
       }
 
-      // Update navigation bar background to dark color
-      const navBgElement = document.querySelector('.navigation__background')
-      if (navBgElement) {
-        GSAP.to(navBgElement, {
-          '--nav-bg-color': offBlack,
-          duration: 0.5,
-          ease: 'power2.inOut'
-        })
-      }
-  
       // Hide gradients completely
       if (this.homeBottom) {
         this.homeBottom.style.opacity = '0'
@@ -160,16 +149,6 @@ export default class extends Component {
         this.elements.easter.style.backgroundColor = '#2c2c2c' // Dark grey for light background (approximate $color-iron)
       }
 
-      // Revert navigation bar background to light color
-      const navBgElement = document.querySelector('.navigation__background')
-      if (navBgElement) {
-        GSAP.to(navBgElement, {
-          '--nav-bg-color': offWhite,
-          duration: 0.5,
-          ease: 'power2.inOut'
-        })
-      }
-  
       // Hide gradients completely
       if (this.homeBottom) {
         this.homeBottom.style.opacity = '0'

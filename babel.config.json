@@ -15,5 +15,14 @@
         "runtime": "automatic"
       }
     ]
-  ]
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        ["transform-remove-console", {
+          "exclude": ["error", "warn"]
+        }]
+      ]
+    }
+  }
 }

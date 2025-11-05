@@ -34,6 +34,8 @@ class ShaderBackgroundErrorBoundary extends React.Component {
     const navBackground = document.querySelector('.navigation__background')
     if (navBackground) {
       navBackground.style.background = '#f8f8f8'
+      navBackground.style.opacity = '1'
+      navBackground.style.visibility = 'visible'
     }
   }
 

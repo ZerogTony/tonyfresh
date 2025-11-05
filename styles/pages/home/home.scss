@@ -11,6 +11,7 @@
   --home-card-padding-x: clamp(2.8rem, 4.5vw, 7.2rem);
   --home-meta-offset-x: clamp(1.8rem, 2.4vw, 3.2rem);
   --home-meta-offset-y: clamp(1.8rem, 2.4vw, 3.2rem);
+  --home-meta-offset-y-adjust: 0rem;
 
   @include media('>=1600px') {
     --home-card-height: 75vh;
@@ -35,9 +36,16 @@
     --home-layout-offset: 4vh;
     --home-card-height: 68vh;
     --home-card-width: min(85vw, 40rem);
-    --home-card-padding-y: 13vh;
-    --home-card-padding-x: clamp(1.6rem, 6vw, 3.2rem);
+    --home-card-padding-y: clamp(3.6rem, 12vh, 5rem);
+    --home-card-padding-x: clamp(1.6rem, 5vw, 2.4rem);
+    --home-meta-offset-x: clamp(2.2rem, 6vw, 3rem);
+    --home-meta-offset-y: clamp(2rem, 6vw, 2.6rem);
+    --home-meta-offset-y-adjust: 0rem;
   }
+}
+
+.home--safari {
+  --home-meta-offset-y-adjust: calc(-1 * clamp(1rem, 3vw, 1.6rem));
 }
 
 .home__overlay {
@@ -184,27 +192,43 @@
     white-space: nowrap;
   }
 
-  &--top-left {
-    top: calc(-1 * var(--home-card-padding-y, 6vh) + var(--home-meta-offset-y, 1.6rem));
-    left: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
-  }
+    &--top-left {
+      top: calc(
+        -1 * var(--home-card-padding-y, 6vh)
+        + var(--home-meta-offset-y, 1.6rem)
+        + var(--home-meta-offset-y-adjust, 0rem)
+      );
+      left: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
+    }
 
-  &--top-right {
-    top: calc(-1 * var(--home-card-padding-y, 6vh) + var(--home-meta-offset-y, 1.6rem));
-    right: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
-    text-align: right;
-  }
+    &--top-right {
+      top: calc(
+        -1 * var(--home-card-padding-y, 6vh)
+        + var(--home-meta-offset-y, 1.6rem)
+        + var(--home-meta-offset-y-adjust, 0rem)
+      );
+      right: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
+      text-align: right;
+    }
 
-  &--bottom-left {
-    bottom: calc(-1 * var(--home-card-padding-y, 6vh) + var(--home-meta-offset-y, 1.6rem));
-    left: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
-  }
+    &--bottom-left {
+      bottom: calc(
+        -1 * var(--home-card-padding-y, 6vh)
+        + var(--home-meta-offset-y, 1.6rem)
+        + var(--home-meta-offset-y-adjust, 0rem)
+      );
+      left: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
+    }
 
-  &--bottom-right {
-    bottom: calc(-1 * var(--home-card-padding-y, 6vh) + var(--home-meta-offset-y, 1.6rem));
-    right: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
-    text-align: right;
-  }
+    &--bottom-right {
+      bottom: calc(
+        -1 * var(--home-card-padding-y, 6vh)
+        + var(--home-meta-offset-y, 1.6rem)
+        + var(--home-meta-offset-y-adjust, 0rem)
+      );
+      right: calc(-1 * var(--home-card-padding-x, 6vw) + var(--home-meta-offset-x, 1.6rem));
+      text-align: right;
+    }
 
   @include media('<=900px') {
     font-size: clamp(1rem, 2vw, 1.3rem);

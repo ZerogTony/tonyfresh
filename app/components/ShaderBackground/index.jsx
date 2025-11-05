@@ -269,14 +269,6 @@ function resolveProjectProps (projectId) {
   })
 }
 
-function updateNavigationBackground (hex) {
-  const navBgElement = document.querySelector('.navigation__background')
-  if (navBgElement) {
-    navBgElement.style.setProperty('--nav-bg-color', hex)
-    navBgElement.style.background = hex
-  }
-}
-
 function ShaderGradientPortal () {
   const defaultColorPropsRef = useRef(null)
   if (!defaultColorPropsRef.current) {
@@ -442,12 +434,6 @@ function ShaderGradientPortal () {
       ...animatedColors
     }
   }, [animatedColors])
-
-  useEffect(() => {
-    if (animatedColors?.color2) {
-      updateNavigationBackground(animatedColors.color2)
-    }
-  }, [animatedColors?.color2])
 
   if (!shaderProps) return null
 

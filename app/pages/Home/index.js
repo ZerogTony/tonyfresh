@@ -31,6 +31,7 @@ export default class extends Page {
     this.currentProjectId = null
     this.awaitingSliderNavigation = false
     this.isMobile = Detection.isMobile()
+    this.isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     this.onSliderProjectChange = this.onSliderProjectChange.bind(this)
     this.onSliderTransitionStart = this.onSliderTransitionStart.bind(this)
@@ -43,11 +44,26 @@ export default class extends Page {
     this.cardCollapseTimeline = null
     this.isCardOpen = false
     this.suppressProjectAnimations = false
+    this.touchScrollMultiplier = this.isMobile ? 2.6 : 2
+    this.touchMovementThreshold = 6
+    this.touchState = {
+      active: false,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      isSliderInteraction: false
+    }
     this.create()
   }
 
   show (url) {
     this.element.classList.add(this.classes.active)
+    if (this.isSafari) {
+      this.element.classList.add('home--safari')
+    } else {
+      this.element.classList.remove('home--safari')
+    }
     window.dispatchEvent(new CustomEvent('unlockScroll'))
 
     const canvasBg = document.querySelector('.canvas__background')
@@ -167,7 +183,7 @@ export default class extends Page {
       }
 
       // Reset text colors to default
-      this.setProjectTextColors('default', '#2c2c2c')
+      this.setProjectTextColors()
     }
 
     // Kill all GSAP animations on this page
@@ -787,27 +803,11 @@ export default class extends Page {
       'inbound': '#fdcb47'
     }
 
-    // Define text colors for each project
-    const projectTextColors = {
-      'sazy': '#B8CCFF', // swapped with ocb
-      'ffmag': '#D9CEC3',
-      'popeyes': '#FFE6E8', // much lighter pink for better contrast on red
-      'boxpark': '#2C2C00', // dark olive for better contrast on yellow
-      'spotify': '#B3A4A4',
-      'stoli': '#ffffff', // fine as is
-      'turning-tide': '#ffffff', // fine as is
-      'idris-elba': '#ffffff', // fine as is (portenoire)
-      'ocb': '#F7F7F7', // swapped with sazy
-      'jack-daniels': '#ffffff', // fine as is
-      'inbound': '#FFF4C4' // much lighter yellow for better contrast on yellow
-    }
-
     const targetColor = projectColors[projectId]
     console.log('Target color for', projectId, ':', targetColor)
 
     if (targetColor) {
-      // Shader background handles visuals now; keep navigation in sync directly
-      this.updateNavigationBackground(targetColor)
+      // Shader background handles visuals now; sync supporting accents only
 
       // Animate home card beams to match project color
       const beamTop = document.querySelector('.home__card__beam--top')
@@ -829,60 +829,47 @@ export default class extends Page {
         })
       }
 
-      // Update text colors based on project
-      const textColor = projectTextColors[projectId]
-      if (textColor) {
-        this.setProjectTextColors(projectId, textColor)
-      }
+      // Ensure navigation elements stay in default contrast
+      this.setProjectTextColors()
     } else {
       console.warn('No color defined for project:', projectId)
     }
   }
 
-  setProjectTextColors(projectId, textColor) {
-    const duration = 0.5
-    const isLightText = textColor === '#ffffff'
+  setProjectTextColors() {
+    const duration = 0.4
+    const defaultTextColor = '#2c2c2c'
+    const defaultLogoFilter = 'invert(1)'
+    const defaultButtonColor = '#2c2c2c'
 
-    // Navigation elements only (keep home text black)
     GSAP.to('.navigation__link', {
-      color: textColor,
-      duration: duration,
+      color: defaultTextColor,
+      duration,
       ease: 'power2.inOut'
     })
 
-    // Logo invert based on text color
     const logoImg = document.querySelector('.navigation__item:first-child img')
     if (logoImg) {
       GSAP.to(logoImg, {
-        filter: isLightText ? 'invert(0)' : 'invert(1)',
-        duration: duration,
+        filter: defaultLogoFilter,
+        duration,
         ease: 'power2.inOut'
       })
     }
 
-    // Easter egg button - use contrasting color to text
     const easterBtn = document.querySelector('.navigation__easter')
     if (easterBtn) {
-      const buttonColor = isLightText ? '#ffffff' : '#2c2c2c'
       GSAP.to(easterBtn, {
-        backgroundColor: buttonColor,
-        duration: duration,
+        backgroundColor: defaultButtonColor,
+        duration,
         ease: 'power2.inOut'
       })
     }
   }
 
-  setLightTextMode(isLight) {
+  setLightTextMode() {
     // Keep this function for backwards compatibility
-    this.setProjectTextColors('default', isLight ? '#ffffff' : '#2c2c2c')
-  }
-
-  updateNavigationBackground(color) {
-    const navBgElement = document.querySelector('.navigation__background')
-    if (navBgElement) {
-      navBgElement.style.setProperty('--nav-bg-color', color)
-      navBgElement.style.background = color
-    }
+    this.setProjectTextColors()
   }
 
   animateActiveProjectOutForTransition () {
@@ -902,14 +889,74 @@ export default class extends Page {
 
   onTouchDown (event) {
     this.list.onTouchDown(event)
+
+    if (!this.slider || this.slider.scrollLocked || this.slider.isTransitioning || this.awaitingSliderNavigation) {
+      this.resetTouchState()
+      return
+    }
+
+    if (event.touches && event.touches.length > 1) {
+      this.resetTouchState()
+      return
+    }
+
+    const pointer = event.touches ? event.touches[0] : event
+
+    this.touchState.active = true
+    this.touchState.isSliderInteraction = false
+    this.touchState.startX = pointer.clientX
+    this.touchState.startY = pointer.clientY
+    this.touchState.lastX = pointer.clientX
+    this.touchState.lastY = pointer.clientY
   }
 
   onTouchMove (event) {
     this.list.onTouchMove(event)
+
+    if (!this.touchState.active || !this.slider || this.slider.scrollLocked || this.slider.isTransitioning || this.awaitingSliderNavigation) {
+      return
+    }
+
+    if (event.touches && event.touches.length > 1) {
+      return
+    }
+
+    const pointer = event.touches ? event.touches[0] : event
+    const deltaY = this.touchState.lastY - pointer.clientY
+    const totalDeltaY = pointer.clientY - this.touchState.startY
+    const totalDeltaX = pointer.clientX - this.touchState.startX
+
+    if (!this.touchState.isSliderInteraction) {
+      const absTotalY = Math.abs(totalDeltaY)
+      const absTotalX = Math.abs(totalDeltaX)
+
+      if (absTotalY < this.touchMovementThreshold && absTotalX < this.touchMovementThreshold) {
+        this.touchState.lastX = pointer.clientX
+        this.touchState.lastY = pointer.clientY
+        return
+      }
+
+      if (absTotalY >= absTotalX) {
+        this.touchState.isSliderInteraction = true
+      } else {
+        this.resetTouchState()
+        return
+      }
+    }
+
+    this.touchState.lastX = pointer.clientX
+    this.touchState.lastY = pointer.clientY
+
+    const scrollDelta = deltaY * this.touchScrollMultiplier
+
+    if (Math.abs(scrollDelta) > 0.01) {
+      this.slider.onScroll(scrollDelta)
+    }
   }
 
   onTouchUp (event) {
     this.list.onTouchUp(event)
+    this.resetTouchState()
   }
 
   onWheel (event) {
@@ -924,6 +971,11 @@ export default class extends Page {
   update () {
     super.update()
     this.list.update()
+  }
+
+  resetTouchState () {
+    this.touchState.active = false
+    this.touchState.isSliderInteraction = false
   }
 
   onSliderProjectChange (event) {
@@ -1024,6 +1076,10 @@ export default class extends Page {
       this.pendingProjectHideTween.kill()
       this.pendingProjectHideTween = null
       this.pendingProjectHideId = null
+    }
+
+    if (this.element) {
+      this.element.classList.remove('home--safari')
     }
 
     super.destroy()

@@ -10,17 +10,15 @@ import each from 'lodash/each'
 
 import Detection from 'classes/Detection'
 import LazyLoad from 'utils/lazyLoad'
+import { initPerformanceMonitoring } from 'utils/performance'
 
 import Intro from 'pages/Intro'
 import About from 'pages/About'
 import Case from 'pages/Case'
 import Home from 'pages/Home'
 
-// Lazy load Three.js slider to reduce initial bundle size
-// This loads ~600KB of Three.js code only when needed
-const loadThreeSlider = () => import(/* webpackChunkName: "three-slider" */ 'components/ThreeSlider')
-const loadShaderBackground = () => import(/* webpackChunkName: "shader-background" */ 'components/ShaderBackground')
-
+import ThreeSlider from 'components/ThreeSlider'
+import ShaderBackground from 'components/ShaderBackground'
 import Navigation from 'components/Navigation'
 
 class App {
@@ -49,14 +47,13 @@ class App {
 
     this.createGlobalOverlay()
     this.createNavigation()
+    this.createSlider()
+    this.createShaderBackground()
     this.createCase()
     this.createHome()
     this.createAbout()
     this.createIntro()
     this.createLazyLoad()
-
-    // Initialize heavy 3D components asynchronously after initial page load
-    this.initializeHeavyComponents()
 
     this.pages = {
 
@@ -82,22 +79,14 @@ class App {
 
     // Start the update loop immediately
     this.onInteract()
+
+    // Initialize performance monitoring
+    initPerformanceMonitoring()
   }
 
   createLazyLoad () {
     this.lazyLoad = new LazyLoad()
     this.lazyLoad.init()
-  }
-
-  async initializeHeavyComponents () {
-    // Load heavy 3D components in parallel for better performance
-    // This reduces initial bundle size by ~600KB
-    await Promise.all([
-      this.createSlider(),
-      this.createShaderBackground()
-    ])
-
-    console.log('Heavy 3D components loaded')
   }
 
   createGlobalOverlay () {
@@ -229,7 +218,7 @@ class App {
     })
   }
 
-  async createSlider () {
+  createSlider () {
     // Query all home project items
     const homeItems = document.querySelectorAll('.home__item')
 
@@ -255,35 +244,17 @@ class App {
     // Get home list element
     const homeList = document.querySelector('.home__list')
 
-    // Lazy load ThreeSlider module
-    try {
-      const { default: ThreeSlider } = await loadThreeSlider()
+    // Create slider
+    this.slider = new ThreeSlider({
+      projects: projectsData,
+      homeList: homeList
+    })
 
-      // Create slider
-      this.slider = new ThreeSlider({
-        projects: projectsData,
-        homeList: homeList
-      })
-
-      console.log('ThreeSlider created at App level with', projectsData.length, 'projects')
-    } catch (error) {
-      console.error('Failed to load ThreeSlider:', error)
-    }
+    console.log('ThreeSlider created at App level with', projectsData.length, 'projects')
   }
 
-  async createShaderBackground () {
-    // Lazy load ShaderBackground module
-    try {
-      const { default: ShaderBackground } = await loadShaderBackground()
-      this.shaderBackground = new ShaderBackground()
-    } catch (error) {
-      console.error('Failed to load ShaderBackground:', error)
-      // Fallback to solid color background
-      const canvasBackground = document.querySelector('.canvas__background')
-      if (canvasBackground) {
-        canvasBackground.style.background = '#f8f8f8'
-      }
-    }
+  createShaderBackground () {
+    this.shaderBackground = new ShaderBackground()
   }
 
   createStats () {
