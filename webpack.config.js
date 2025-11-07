@@ -1,7 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const CnameWebpackPlugin = require('cname-webpack-plugin')
@@ -79,7 +77,7 @@ module.exports = {
 
   plugins: [
     // CleanWebpackPlugin removed - was causing build output to be deleted
-    
+
     new webpack.DefinePlugin({
       IS_DEVELOPMENT: JSON.stringify(IS_DEVELOPMENT)
     }),
