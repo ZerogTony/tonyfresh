@@ -7,7 +7,10 @@
     "build:analyze": "cross-env NODE_ENV=production ANALYZE=true webpack --config webpack.config.build.js --progress",
     "development": "cross-env NODE_ENV=development webpack serve --config webpack.config.development.js --progress",
     "lint": "eslint --config .eslintrc.js *.js",
-    "deploy": "cross-env git subtree push --prefix public origin gh-pages"
+    "deploy": "cross-env git subtree push --prefix public origin gh-pages",
+    "clean:public": "node scripts/clean-public.js",
+    "prebuild": "npm run clean:public",
+    "prebuild:analyze": "npm run clean:public"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

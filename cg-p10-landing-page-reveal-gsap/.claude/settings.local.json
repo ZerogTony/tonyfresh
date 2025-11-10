@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Read(//c/Users/tusii/Documents/Projects/code/bizar.ro/partials/**)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}

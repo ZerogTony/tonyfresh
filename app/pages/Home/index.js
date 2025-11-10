@@ -44,8 +44,9 @@ export default class extends Page {
     this.cardCollapseTimeline = null
     this.isCardOpen = false
     this.suppressProjectAnimations = false
-    this.touchScrollMultiplier = this.isMobile ? 3.4 : 2
-    this.touchMovementThreshold = this.isMobile ? 3 : 6
+    this.touchScrollMultiplier = this.isMobile ? 4.6 : 2
+    this.touchMovementThreshold = this.isMobile ? 1.5 : 6
+    this.touchScrollActivationThreshold = this.isMobile ? 0.003 : 0.01
     this.touchState = {
       active: false,
       startX: 0,
@@ -955,7 +956,7 @@ export default class extends Page {
 
     const scrollDelta = deltaY * this.touchScrollMultiplier
 
-    if (Math.abs(scrollDelta) > 0.01) {
+    if (Math.abs(scrollDelta) > this.touchScrollActivationThreshold) {
       this.slider.onScroll(scrollDelta)
     }
   }

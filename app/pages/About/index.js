@@ -1,20 +1,14 @@
 import FontFaceObserver from 'fontfaceobserver'
-
 import each from 'lodash/each'
 
-
 import Scrolling from 'components/Scrolling'
-
 import Detection from 'classes/Detection'
-
 import Page from 'components/Page'
-
-
-
 
 import { BREAKPOINT_PHONE } from 'utils/breakpoints'
 import { getOffset } from 'utils/dom'
 import { clamp, delay } from 'utils/math'
+import { waitForImageReady } from 'utils/images'
 
 export default class extends Page {
   constructor () {
@@ -44,14 +38,25 @@ export default class extends Page {
   create () {
     super.create()
 
-    const image = new Image()
+    const galleryElement = this.elements.gallery
+    const imageSrc = galleryElement
+      ? galleryElement.getAttribute(Detection.isWebPSupported() ? 'data-src-webp' : 'data-src')
+      : null
 
-    image.className = 'about__gallery__image'
-    image.src = this.elements.gallery.getAttribute(Detection.isWebPSupported() ? 'data-src-webp' : 'data-src')
-    image.decode().then(_ => {
-      this.elements.gallery.classList.add(this.classes.galleryActive)
-      this.elements.gallery.appendChild(image)
-    })
+    if (galleryElement && imageSrc) {
+      const image = new Image()
+      image.className = 'about__gallery__image'
+      image.src = imageSrc
+
+      waitForImageReady(image).then(() => {
+        galleryElement.classList.add(this.classes.galleryActive)
+        galleryElement.appendChild(image)
+      }).catch(error => {
+        console.error('[About] Failed to load gallery image', error)
+      })
+    } else {
+      console.error('[About] Missing gallery image source')
+    }
 
     const font = new FontFaceObserver('Neue Montreal', 10000)
 

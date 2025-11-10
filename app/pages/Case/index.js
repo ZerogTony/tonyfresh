@@ -4,6 +4,7 @@ import Page from 'components/Page';
 import GSAP from 'gsap';
 import { delay } from 'utils/math';
 import SplitType from 'split-type';
+import { waitForImageReady } from 'utils/images';
 
 export default class extends Page {
   constructor({ slider }) {
@@ -402,15 +403,25 @@ export default class extends Page {
     const medias = this.elements.wrapper.querySelectorAll('.case__gallery__media__placeholder')
 
     each(medias, media => {
+      const mediaSrc = media.getAttribute(Detection.isWebPSupported() ? 'data-src-webp' : 'data-src')
+
+      if (!mediaSrc) {
+        console.error('[Case] Media placeholder missing source attribute')
+        return
+      }
+
       const image = new Image()
 
       image.className = 'case__gallery__media__image'
-      image.src = media.getAttribute(Detection.isWebPSupported() ? 'data-src-webp' : 'data-src')
-      image.decode().then(_ => {
+      image.src = mediaSrc
+
+      waitForImageReady(image).then(() => {
         media.classList.add(this.classes.mediaActive)
         media.appendChild(image)
-                this.onResize()
-
+        this.onResize()
+      }).catch(error => {
+        console.error('[Case] Failed to load gallery image', error)
+        media.classList.add('case__gallery__media__placeholder--error')
       })
     })
 
